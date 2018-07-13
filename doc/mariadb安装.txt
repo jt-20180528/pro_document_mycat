@@ -1,0 +1,29 @@
+mariadb tar安装：
+
+1：下载tar安装包，解压
+
+2：在basedir中创建相关目录
+  tmp、logs/mysql.log
+  
+3：赋予权限
+  chown -R mysql:mysql mariadb/
+  
+4：进入/scripts/目录开始安装
+  ./mysql_install_db --datadir=/home/mysql/mariadb-10.0.33-slave2/data --basedir=/home/mysql/mariadb-10.0.33-slave2 --user=mysql
+  
+5：进入客户端
+
+6：修改密码，创建用户，赋予权限
+  select user,host,password from user;
+
+  UPDATE user SET password=password('123456') WHERE user='root';
+  
+  create user 't_user1'@'%' identified by '123456';
+  
+  GRANT ALL ON *.* TO 't_user1'@'%' WITH GRANT OPTION;
+  
+  update user set host='%' where user='root';
+  
+  update user set host='localhost' where user='root' and host='::1'
+  
+  flush privileges;

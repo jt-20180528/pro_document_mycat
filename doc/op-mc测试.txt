@@ -1,0 +1,51 @@
+t_bet_order
+t_bet_order_2018
+t_bet_order_data
+t_chase_issue
+t_chase_number
+t_chase_order
+t_lottery_number
+t_lottery_number_2018
+t_lottery_number_info
+t_message
+t_report_game
+t_report_team
+t_report_team_platform
+t_report_tenant
+t_report_tenant_platform
+t_report_user
+t_report_user_platform
+t_transaction
+t_user_login
+t_lottery_number_info
+
+1：启动服务
+
+设置端口号：
+idea启动op项目端口号设置
+-Ddubbo.qos.port=33333
+
+2：访问http://localhost:8090/api/apidoc/login
+登陆
+账号：admin002/aaa000
+ 后台用户，输入验证码
+ 
+ 运营商管理
+ yys/admin
+ 
+ <1>:测试ct投注
+ 获取ct token：1530588683316 	
+ 
+gameId: 3
+issue: 20180703-033
+content: 0|0|0
+rebatePoint: 0
+bid: 36
+betCount: 1
+moneyUnitCode: 1
+bmultipe: 1
+moneySum: 2
+moneyTotal: 2
+position: 
+token: 1530588287378
+device: 0

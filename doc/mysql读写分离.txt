@@ -1,0 +1,48 @@
+1：过滤日志
+tail -n 50 -f mycat.log |grep select|grep tableName
+
+<table name="t_bet_order" dml="1111"></table>
+<table name="t_bet_order_temp" dml="1111"></table>
+<table name="t_job" dml="1111"></table>
+<table name="t_lotteryUser" dml="1111"></table>
+<table name="t_organization" dml="1111"></table>
+<table name="t_resource" dml="1111"></table>
+<table name="t_roleResource" dml="1111"></table>
+<table name="t_tenement" dml="1111"></table>
+<table name="t_user" dml="1111"></table>
+<table name="t_userJob" dml="1111"></table>
+<table name="t_userOrganization" dml="1111"></table>
+<table name="t_userRole" dml="1111"></table>
+<table name="t_user_temp" dml="1111"></table
+
+mariadb安装
+
+安装并启动：
+./mysql_install_db --user=mysql --basedir=/home/mysql/mariadb-10.0.33-slave1 --datadir=/home/mysql/mariadb-10.0.33-slave1/data &
+
+./mysqld_safe --defaults-file=/etc/my.cnf &
+
+更新默认密码：
+UPDATE user SET Password = password ( '123456') WHERE User = 'root';
+
+主库赋予slave读取权限：
+grant replication slave on *.* to 't_user1'@'%';
+
+创建账号：
+create user 't_user1'@'%' identified by '123456';
+
+grant all privileges on *.* to 't_user1'@'%' identified by '123456' WITH GRANT OPTION;
+
+flush privileges;
+
+CHANGE MASTER TO MASTER_HOST='192.168.0.23', MASTER_USER='t_user1', MASTER_PASSWORD='123456',master_port=3307,MASTER_LOG_FILE='mysql-bin.000003',  
+MASTER_LOG_POS=342; 
+
+CHANGE MASTER TO MASTER_LOG_FILE='mysql-bin.000012',MASTER_LOG_POS=326;
+
+show variables like 'collation_%';
+show variables like 'character_set_%';
+
+去检查客户机和服务器的字符集是否一致
+
+

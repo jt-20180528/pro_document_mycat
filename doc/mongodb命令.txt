@@ -1,0 +1,8 @@
+mongodb shell命令
+
+1：创建用户
+  db.createUser({user:"root",pwd:"123456",roles:["root"]}) //添加管理员
+2：远程连接
+   mongo -u username -p pwd 192.168.41.215:27017/database(用户名对应的数据库)
+3：客户端登陆
+  ./mongo jt_test -u t_user1 -p 123456 --port 2017

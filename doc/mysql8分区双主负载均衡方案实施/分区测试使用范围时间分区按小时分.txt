@@ -1,0 +1,197 @@
+DELIMITER //
+CREATE PROCEDURE `proc_add_partition`(IN v_tablename VARCHAR(50),v_add_interval INT)
+BEGIN
+/* =======================================================================
+     * 系统名 : **系统
+     * 子系统名 : 创建,删除分区
+     * PROC名 : proc_mc_addjust_partition
+     * 概要 : 每天规定时间内创建和删除分区
+     * 例：加分区： alter table t_bet_order add partition (partition t_bet_order_20180923_0 VALUES LESS THAN('2018-09-23 1:00:00'))
+     *     删分区:  alter table mc_stat_trends drop partition p20150310
+     * 改版履历 :
+     * 版本 日期 作者名 备注
+     * 1.0.1 2015.03.01 ### 初次作成
+     * ======================================================================= */
+    -- 传入变量: v_drop_interval 删除日  v_add_interval 添加日
+    DECLARE v_add_interval_1 INT;
+    SET v_add_interval_1=v_add_interval+1;
+
+	SET @t0=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_0')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 1:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t1=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_1')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 2:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t2=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_2')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 3:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t3=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_3')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 4:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t4=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_4')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 5:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t5=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_5')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 6:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t6=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_6')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 7:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t7=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_7')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 8:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t8=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_8')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 9:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t9=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_9')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 10:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t10=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_10')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 11:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t11=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_11')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 12:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t12=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_12')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 13:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t13=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_13')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 14:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t14=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_14')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 15:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t15=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_15')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 16:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t16=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_16')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 17:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t17=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_17')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 18:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t18=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_18')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 19:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t19=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_19')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 20:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t20=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_20')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 21:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t21=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_21')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 22:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t22=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_22')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval DAY)),'%Y-%m-%d'),' 23:00:00',"')"),')','ENGINE = INNODB)');
+	SET @t23=CONCAT('alter table ',v_tablename,' add partition ','(PARTITION ',v_tablename,'_', CONCAT(DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d_23')), 
+	' VALUES LESS THAN',' (UNIX_TIMESTAMP',CONCAT("('",DATE_FORMAT(DATE(DATE_ADD(NOW(),INTERVAL (v_add_interval +1) DAY)),'%Y-%m-%d'),' 0:00:00',"')"),')','ENGINE = INNODB)');
+
+	PREPARE stmt FROM @t0; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t1; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t2; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t3; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t4; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t5; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t6; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t7; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t8; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t9; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t10; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t11; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t12; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t13; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t14; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t15; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t16; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t17; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t18; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t19; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t20; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t21; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t22; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	
+	PREPARE stmt FROM @t23; 
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+END;
+//
+DELIMITER ;
+
+CALL proc_add_partition('t_user',1);
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `proc_table_partition1`$$
+
+CREATE DEFINER=`root`@`%` PROCEDURE `proc_table_partition1`()
+BEGIN 
+SET @array_tableName="t_bet_order,t_report_game,t_report_team,t_report_team_platform,t_report_tenant,t_report_tenant_platform,t_report_user,t_report_user_platform,t_transaction,t_lottery_number"; 
+SET @i=0; 
+SET @count=CHAR_LENGTH(@array_tableName)-CHAR_LENGTH(REPLACE(@array_tableName,',','')) + 1; 
+SET @tableName='';
+
+WHILE @i <= @count 
+DO 
+
+SET @tableName=REVERSE(SUBSTRING_INDEX(REVERSE(SUBSTRING_INDEX(@array_tableName,',',1)),',',1));
+CALL proc_add_partition(CONCAT("'",@tableName,"'"),1);
+
+SET @i=@i+1; 
+END WHILE; 
+END$$
+
+DELIMITER ;
+
+CREATE
+EVENT event_add_partition
+ON SCHEDULE EVERY 1 DAY STARTS '2016-09-23 23:00:00'
+ON COMPLETION NOT PRESERVE
+ENABLE
+DO call proc_table_partition()

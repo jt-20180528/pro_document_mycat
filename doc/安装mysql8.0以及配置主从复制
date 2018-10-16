@@ -1,0 +1,133 @@
+(2)：开始安装
+cd ${mysql}
+./mysqld --initialize --user=mysql --datadir=/home/mysql/mysql-8.0.12/mysql-8.0.12-master/data --basedir=/home/mysql/mysql-8.0.12/mysql-8.0.12-master
+如果出现文件夹目录不存在则需要创建
+
+安装完毕，复制密码信息。
+
+(3):启动服务
+cd ${mysql}
+sh ./bin/mysqld_safe --defaults-file=/etc/my3306-master.cnf [--user=mysql]&
+检查服务是否真的启动：
+lsof -i:3306
+netstat -ant
+ps -ef|grep mysql
+如果有任何错误，请检查日志
+
+(4)：登陆服务，设置密码，创建用户，授权，修改字符集，修改客户端访问，修改密码验证模式，设置主从节点信息等
+登陆服务：./mysql -uroot -port3306 -p -S ../tmp/mysql.sock
+输入密码进入，会提示先修改密码：
+
+设置密码：ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '123456';
+
+修改客户端访问：use mysql;
+select user,host from user;
+update user set host='%' where user='root';
+
+创建用户：create user 't_user1'@'%' IDENTIFIED WITH mysql_native_password BY '123456'; 
+
+授权：GRANT ALL ON *.* TO 't_user1'@'%';
+GRANT ALL ON *.* TO 'root'@'%';
+
+再次查看是否修改成功：select user,host from user;
+
+[可选，因为已经]修改密码验证方式：ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
+
+刷新使生效：FLUSH PRIVILEGES;
+
+查看数据库字符集：show variables like "%character%";show variables like "%collation%";
+
+(5):配置主从节点
+  配置主节点：
+  修改master配置文件my3306-master.sh
+  log-bin=mysql-bin
+  log-bin-index=mysql-bin.index
+  server_id=1
+
+#主从配置
+binlog-do-db=op    #待同步的数据库
+binlog-do-db=jt_test
+log-slave-updates=1
+binlog-ignore-db=information_schema
+binlog-ignore-db=performance_schema
+binlog-ignore-db=mysql
+binlog-ignore-db=sys
+slave-skip-errors=all
+lower_case_table_names=1  ##mysql8.0设置为1可能启动不成功，需要先注释掉，然后修改配置，然后重启服务【使用命令】，然后创建库创建表
+
+重启master服务：ps -ef|grep mysql
+kill掉所有的服务
+
+重新启动，并登陆mysql：./mysql -uroot -port3306 -p -S ../tmp/mysql.sock   ##可以做成一个脚本
+
+查看master状态：show status master;  ##可以看到同步的表和费同步的表
+
+开始配置同步权限信息：
+赋予t_user1用户权限通过slave同步：
+grant all privileges on *.* to 't_user1'@'%' identified by '123456' WITH GRANT OPTION;
+
+主库赋予slave读取权限：
+grant replication slave on *.* to 't_user1'@'%';
+
+刷新信息：
+flush privileges;
+
+检查数据库的server-id：
+SHOW VARIABLES LIKE 'server_id'; 
+临时设置值：set global server_id=3
+
+检查数据库的复制类型：
+SHOW VARIABLES LIKE 'slave_parallel_type';
+
+可以配置多线程复制：
+
+stop slave;
+
+设置复制类型为 LOGICAL_CLOCK
+set global slave_parallel_type='logical_clock';
+show variables like 'slave_parallel_type';
+
+设置并行数量为 4
+set global slave_parallel_workers=4;
+show variables like 'slave_parallel_workers';
+start slave;
+
+查看一下当前工作的线程数
+show processlist;
+
+从节点设置：
+先登陆从节点服务器：
+stop slave;
+
+修改ip、账号、密码、二进制文件、位移编号、、
+CHANGE MASTER TO MASTER_HOST='192.168.0.213', MASTER_USER='t_user1', MASTER_PASSWORD='123456',master_port=3306,MASTER_LOG_FILE='mysql-bin.000002',
+MASTER_LOG_POS=155;
+
+启动从节点：
+start slave;
+
+查看同步情况：
+show slave status\G;
+
+如果出现数据不同步的情况：
+stop slave;
+
+CHANGE MASTER TO MASTER_LOG_FILE='mysql-bin.000068',MASTER_LOG_POS=155;
+
+reset slave;
+
+start slave;
+
+再次查看同步情况。
+
+安装confluence时，要求数据库的事务隔离级别改为【READ-COMMITTED】
+修改数据库事务隔离级别：
+set session transaction isolation level read committed;
+set global transaction isolation level read committed；
+SET GLOBAL tx_isolation='READ-COMMITTED'; 
+
+查询验证：
+select @@global.tx_isolation, @@session.tx_isolation;
+
+查看字符集信息：
+show variables like "%character%";show variables like "%collation%";

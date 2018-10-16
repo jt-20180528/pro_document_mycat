@@ -1,0 +1,60 @@
+安装配置地址：https://blog.csdn.net/jiankunking/article/details/70184376
+日志配置地址：https://www.cnblogs.com/yangxiaoyi/p/6919163.html
+
+haproxy服务安装配置：
+ 准备在a、b两台机安装haproxy负载均衡服务
+ tar -zxvf haproxy-1.8.13.tar.gz
+ cd haproxy-1.8.13
+ 
+ ##安装前需要对插件工具安装
+ yum install -y gcc g++ gcc-c++ make
+ 
+ make TARGET=linux2628 PREFIX=/usr/local/haproxy   安装路径
+ make install PREFIX=/usr/local/haproxy
+ 
+ ./sbin/haproxy -v  查看版本
+ 
+ ##复制启动文件，启动时默认会从这里查找
+ cp /usr/local/haproxy/sbin/haproxy /usr/sbin/
+ 
+ cp ./examples/haproxy.init /etc/init.d/haproxy
+ chmod 755 /etc/init.d/haproxy
+ 
+ ##添加用户，配置中会使用这个用户
+ useradd -r haproxy
+ 
+ ##创建配置文件地址
+ mkdir /etc/haproxy
+ vi /etc/haproxy/haproxy.cfg
+ 
+ ##配置文件内容请见项目中配置
+ 
+ ##配置日志，创建日志文件
+ mkdir /var/log/haproxy
+ chmod a+w /var/log/haproxy
+ 
+ ##编辑“/etc/rsyslog.conf”打开如下配置项：
+ # Provides UDP syslog reception
+ $ModLoad imudp
+ $UDPServerRun 514
+ 
+ ##添加如下内容
+ # Save haproxy log
+ local0.*                       /var/log/haproxy/haproxy.log
+ 
+ ##修改“/etc/sysconfig/rsyslog”文件
+ # Options for rsyslogd
+ # Syslogd options are deprecated since rsyslog v3.
+ # If you want to use them, switch to compatibility mode 2 by "-c 2"
+ # See rsyslogd(8) for more details
+ SYSLOGD_OPTIONS="-r -m 0 -c 2"
+ 
+ ##编辑haproxy配置文件，进行如下内容修改
+ log 127.0.0.1 local0 info
+ 
+ ###重启服务
+ systemctl restart haproxy
+ service rsyslog restart
+ 
+ ###查看日志记录
+ tailf /var/log/haproxy/haproxy.log

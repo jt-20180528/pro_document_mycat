@@ -1,0 +1,190 @@
+1：mysql分区字段必须是主键，如有，可以是联合主键
+所以先检查数据表，是否有主键，是否分区字段是联合主键
+
+2：分区表t_bet_order，分区字段BET_TIME
+设置联合主键：alter table t_bet_order add primary key (id,createTime);
+如果出现错误，则需要修改分区字段为非空，重新执行，或者刪除表重建，添加PRIMARY KEY (`id`,`createTime`)在列中。
+
+3：查看分区的执行效率 explain PARTITIONS sql;
+查看表分布情况：
+SELECT
+  partition_name part, 
+  partition_expression expr, 
+  partition_description descr, 
+  table_rows 
+FROM
+  INFORMATION_SCHEMA.partitions 
+WHERE
+  TABLE_SCHEMA = schema() 
+  AND TABLE_NAME='vehicle_coord_range'; 
+
+4：给创建好的表创建分区
+ALTER TABLE table_name PARTITION BY RANGE (Month((create_time))
+PARTITION vehicle_coord_20171122 VALUES LESS THAN (TO_DAYS('2017-11-22'))
+);
+
+创建表时一起创建分区：
+create table()
+PARTITION BY RANGE (to_days(date)) ( 
+PARTITION p201409 VALUES LESS THAN (to_days('2014-10-01'))ENGINE = InnoDB
+DATA DIRECTORY = '/data0/data'
+INDEX DIRECTORY = '/data1/idx',
+PARTITION p201410 VALUES LESS THAN (to_days('2014-11-01'))ENGINE = InnoDB
+DATA DIRECTORY = '/data0/data'
+INDEX DIRECTORY = '/data1/idx',
+PARTITION p201411 VALUES LESS THAN (to_days('2014-12-01'))ENGINE = InnoDB
+DATA DIRECTORY = '/data0/data'
+INDEX DIRECTORY = '/data1/idx',
+PARTITION p201412 VALUES LESS THAN (to_days('2015-01-01'))ENGINE = InnoDB
+DATA DIRECTORY = '/data0/data'
+INDEX DIRECTORY = '/data1/idx',
+PARTITION p201501 VALUES LESS THAN (to_days('2015-02-01'))ENGINE = InnoDB
+DATA DIRECTORY = '/data0/data'
+INDEX DIRECTORY = '/data1/idx',
+PARTITION p201502 VALUES LESS THAN (to_days('2015-03-01'))ENGINE = InnoDB
+DATA DIRECTORY = '/data0/data'
+INDEX DIRECTORY = '/data1/idx',
+PARTITION p2019 VALUES LESS THAN (MAXVALUE) 
+DATA DIRECTORY = '/data0/data'
+INDEX DIRECTORY = '/data1/idx')
+
+5：旧数据迁移
+insert into vehicle_coord_range select * from 旧表; 
+
+6：删除表分区
+ALTER TABLE vehicle_coord_range DROP PARTITION vehicle_coord_20171209;
+
+7：存储过程每天定时创建分区
+BEGIN
+	
+  -- 表名赋值
+  set @p_name = (select concat('vehicle_coord_',date_format(date_sub(curdate(),interval - 2 day),'%Y%m%d'))from dual);
+ 
+  -- 表的日期限制
+  set @p_date = (select date_sub(curdate(),interval - 2 day)from dual);
+	
+ 
+  -- 添加分区sql语句
+  set @p_sql = concat('ALTER TABLE vehicle_coord_range ADD PARTITION(PARTITION ',@p_name,' VALUES LESS THAN (TO_DAYS(\'',@p_date,'\')))');
+	
+  -- 预处理sql，其中stmt是一个变量
+  PREPARE stmt FROM @p_sql; 
+  -- 执行SQL语句
+  EXECUTE stmt;
+  -- 释放掉预处理段
+  DEALLOCATE PREPARE stmt; -- 释放掉预处理段
+ 
+END
+
+8：查看是否开始定时任务
+show variables like 'event_scheduler';
+
+9：开启事件
+set global event_scheduler = on;
+
+10：调用存储过程
+call set_vehicle_coord_partition
+
+11：测试根据rang范围进行分区测试，注意不能标注data路径和index路径，写上去会出错。
+使用范围根据id范围分区
+ALTER TABLE t_user PARTITION BY RANGE COLUMNS(id)(
+	PARTITION t_user_10 VALUES LESS THAN (100000)ENGINE = InnoDB,
+	PARTITION t_user_20 VALUES LESS THAN (200000)ENGINE = InnoDB,
+	PARTITION t_user_30 VALUES LESS THAN (300000)ENGINE = InnoDB,
+	PARTITION t_user_40 VALUES LESS THAN (400000)ENGINE = InnoDB,
+	PARTITION t_user_50 VALUES LESS THAN (500000)ENGINE = InnoDB,
+	PARTITION t_user_60 VALUES LESS THAN (600000)ENGINE = InnoDB,
+	PARTITION t_user_70 VALUES LESS THAN (700000)ENGINE = InnoDB,
+	PARTITION t_user_80 VALUES LESS THAN (800000)ENGINE = InnoDB,
+	PARTITION t_user_90 VALUES LESS THAN (900000)ENGINE = InnoDB,
+	PARTITION t_user_100 VALUES LESS THAN (1000000)ENGINE = InnoDB,
+	PARTITION t_user_101 VALUES LESS THAN (MAXVALUE)ENGINE = InnoDB
+);
+
+ALTER TABLE t_user PARTITION BY RANGE (to_days(createTime))(
+	PARTITION t_user_2018 VALUES LESS THAN (to_days('2018-09-20'))ENGINE = InnoDB,
+	PARTITION t_user_2068 VALUES LESS THAN (to_days('2068-09-20'))ENGINE = InnoDB,
+	PARTITION t_user_2118 VALUES LESS THAN (to_days('2118-09-20'))ENGINE = InnoDB,
+	PARTITION t_user_2168 VALUES LESS THAN (to_days('2168-09-20'))ENGINE = InnoDB,
+	PARTITION t_user_3118 VALUES LESS THAN (to_days('3118-09-20'))ENGINE = InnoDB,
+	PARTITION t_user_3168 VALUES LESS THAN (to_days('3168-09-20'))ENGINE = InnoDB,
+	PARTITION t_user_4118 VALUES LESS THAN (to_days('4118-09-20'))ENGINE = InnoDB,
+	PARTITION t_user_4168 VALUES LESS THAN (to_days('4168-09-20'))ENGINE = InnoDB,
+	PARTITION t_user_2118 VALUES LESS THAN (to_days('5118-09-20'))ENGINE = InnoDB,
+	PARTITION t_user_5118 VALUES LESS THAN (to_days('5168-09-20'))ENGINE = InnoDB,
+	PARTITION t_user_5118 VALUES LESS THAN (MAXVALUE)ENGINE = InnoDB
+);
+
+DATA DIRECTORY = '/home/mysql/mariadb-10.0.33-master1/partition/data1/data'
+	INDEX DIRECTORY = '/home/mysql/mariadb-10.0.33-master1/partition/data1/idx',
+	
+12：对已经创建好的表添加分区
+首先执行，添加分区管理；
+ALTER TABLE t_user PARTITION BY RANGE COLUMNS(id)(
+	PARTITION p1 VALUES LESS THAN (100000)
+);
+
+在创建分区：
+ALTER TABLE t_user ADD PARTITION(
+PARTITION p4 VALUES LESS THAN (400000)ENGINE = INNODB
+);
+
+13：自动分区存储过程
+
+CREATE PROCEDURE AutoPartition()
+            BEGIN
+              DECLARE v_sysdate date;
+              DECLARE v_mindate date;
+              DECLARE v_maxdate date;
+              DECLARE v_pt varchar(20);
+              DECLARE v_maxval varchar(20);
+              DECLARE i int;
+        
+              /*增加新分区*/
+              SELECT FROM_UNIXTIME(max(partition_description) + 86400) AS val
+              INTO   v_maxdate
+              FROM   INFORMATION_SCHEMA.PARTITIONS
+              WHERE  TABLE_NAME = 'files';
+        
+              set v_sysdate = sysdate();
+        
+              WHILE v_maxdate <= (v_sysdate + INTERVAL 2 DAY) DO
+                SET v_pt = date_format(v_maxdate,'%Y%m%d');
+                SET v_maxval = date_format(v_maxdate, '%Y-%m-%d');
+                SET @sql = concat('alter table files add partition (partition p', v_pt, ' values less than(UNIX_TIMESTAMP(''', v_maxval, ''')))');
+                -- SELECT @sql;
+                PREPARE stmt FROM @sql;
+                EXECUTE stmt;
+                DEALLOCATE PREPARE stmt;
+                SET v_maxdate = v_maxdate + INTERVAL 1 DAY;
+              END WHILE;
+        
+              /*删除旧分区*/
+              SELECT FROM_UNIXTIME(min(partition_description)) AS val
+              INTO   v_mindate
+              FROM   INFORMATION_SCHEMA.PARTITIONS
+              WHERE  TABLE_NAME = 'files';
+        
+              WHILE v_mindate <= (v_sysdate - INTERVAL 3 DAY) DO
+                SET v_pt = date_format(v_mindate,'%Y%m%d');
+                SET @sql = concat('alter table files drop partition p', v_pt);
+                -- SELECT @sql;
+                PREPARE stmt FROM @sql;
+                EXECUTE stmt;
+                DEALLOCATE PREPARE stmt;
+                SET v_mindate = v_mindate + INTERVAL 2 DAY;
+              END WHILE;
+            END
+			
+自动分区事件：
+create event AutoPartitionEvent
+        on schedule every 1 day starts '{$start_day}'
+        ON COMPLETION PRESERVE ENABLE
+        do
+          BEGIN
+            call AutoPartition();
+          END
+		  
+15：开关定时任务
+打开定时任务：ALTER EVENT event_add_partition ON COMPLETION PRESERVE DISABLE;
+关闭定时任务：ALTER EVENT event_add_partition ON COMPLETION PRESERVE enable;

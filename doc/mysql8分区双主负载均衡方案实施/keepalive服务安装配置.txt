@@ -1,0 +1,82 @@
+配置地址：https://blog.csdn.net/u013256816/article/details/77171017
+
+keepalive安装配置：
+ #安装前需要安装工具包
+ yum -y install openssl-devel
+ yum install -y libnfnetlink-devel
+ 
+[root@node1 ~]# tar zxvf keepalived-1.3.5.tar.gz 
+[root@node1 ~]# cd keepalived-1.3.5
+[root@node1 keepalived-1.3.5]# ./configure --prefix=/opt/keepalived --with-init=SYSV 
+#注：(upstart|systemd|SYSV|SUSE|openrc) #根据你的系统选择对应的启动方式
+[root@node1 keepalived-1.3.5]# make
+[root@node1 keepalived-1.3.5]# make install
+ 
+ #复制启动脚本到/etc/init.d/下
+[root@node1 ~]# cp /opt/keepalived/etc/rc.d/init.d/keepalived /etc/init.d/ 
+[root@node1 ~]# cp /opt/keepalived/etc/sysconfig/keepalived /etc/sysconfig
+[root@node1 ~]# cp /opt/keepalived/sbin/keepalived /usr/sbin/
+[root@node1 ~]# chmod +x /etc/init.d/keepalived 
+[root@node1 ~]# chkconfig --add keepalived
+[root@node1 ~]# chkconfig keepalived on
+#Keepalived默认会读取/etc/keepalived/keepalived.conf配置文件
+[root@node1 ~]# mkdir /etc/keepalived
+[root@node1 ~]# cp /opt/keepalived/etc/keepalived/keepalived.conf /etc/keepalived/
+
+service keepalived restart
+service keepalived start
+service keepalived stop
+service keepalived status
+
+修改/etc/keepalived/keepalived.conf文件
+
+#Keepalived配置文件
+global_defs {
+        router_id NodeA                 #路由ID, 主备的ID不能相同
+}
+
+#自定义监控脚本
+vrrp_script chk_haproxy {
+        script "/etc/keepalived/check_haproxy.sh"
+        interval 5
+        weight 2
+}
+
+vrrp_instance VI_1 {
+        state MASTER #Keepalived的角色。Master表示主服务器，从服务器设置为BACKUP
+        interface eth0          #指定监测网卡
+        virtual_router_id 1
+        priority 100            #优先级，BACKUP机器上的优先级要小于这个值
+        advert_int 1            #设置主备之间的检查时间，单位为s
+        authentication {        #定义验证类型和密码
+                auth_type PASS
+                auth_pass root123
+        }
+        track_script {
+                chk_haproxy
+        }
+        virtual_ipaddress {     #VIP地址，可以设置多个：
+                192.168.0.10
+        }
+}
+
+##修改配置文件
+#!/bin/bash
+if [ $(ps -C haproxy --no-header | wc -l) -eq 0 ];then
+        haproxy -f /opt/haproxy-1.7.8/haproxy.cfg
+fi
+sleep 2
+if [ $(ps -C haproxy --no-header | wc -l) -eq 0 ];then
+        service keepalived stop
+fi
+
+##配置日志
+修改/etc/sysconfig/keepalived文件
+KEEPALIVED_OPTIONS="-D -d -S 0" 
+
+##修改/etc/syslog.conf
+# keepalived -S 0 
+local0.*                                                /var/log/keepalived.log
+
+##重启日志
+service rsyslog restart

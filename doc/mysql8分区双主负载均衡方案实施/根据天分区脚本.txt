@@ -1,0 +1,44 @@
+DELIMITER //
+CREATE PROCEDURE `proc_add_drop_partition`(IN v_tablename VARCHAR(50),v_drop_interval INT,v_add_interval INT)
+BEGIN
+/* =======================================================================
+     * 系统名 : **系统
+     * 子系统名 : 创建,删除分区
+     * PROC名 : proc_mc_addjust_partition
+     * 概要 : 每天规定时间内创建和删除分区
+     * 例：加分区： alter table mc_stat_trends add partition (partition p20150417 VALUES LESS THAN('2015-04-17'))
+     *     删分区:  alter table mc_stat_trends drop partition p20150310
+     * 改版履历 :
+     * 版本 日期 作者名 备注
+     * 1.0.1 2015.03.01 ### 初次作成
+     * ======================================================================= */
+    -- 传入变量: v_drop_interval 删除日  v_add_interval 添加日
+    DECLARE v_add_interval_1 INT;
+    SET v_add_interval_1=v_add_interval+1;
+    START TRANSACTION;
+    SET @s=CONCAT('alter table ',v_tablename,' drop partition ', CONCAT('p',DATE_FORMAT(DATE_SUB(NOW(),INTERVAL v_drop_interval DAY),'%Y%m%d')));
+    SET @t=CONCAT('alter table ',v_tablename,' add partition ','(','partition ', CONCAT('p',DATE_FORMAT(DATE_ADD(NOW(),INTERVAL v_add_interval DAY),'%Y%m%d')), ' VALUES LESS THAN','(',UNIX_TIMESTAMP(DATE(DATE_ADD(NOW(),INTERVAL v_add_interval_1 DAY))),')',')');
+    SELECT @s;
+    PREPARE stmt FROM @s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    SELECT @t;
+    PREPARE stmt FROM @t;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    COMMIT;
+END;
+//
+DELIMITER ;
+
+
+CREATE DEFINER=`root`@`localhost` 
+EVENT `NewEvent`
+ON SCHEDULE EVERY 1 DAY STARTS '2016-09-02 01:10:00'
+ON COMPLETION PRESERVE
+ENABLE
+DO
+BEGIN
+        CALL proc_add_drop_partition('mc_stat_trends',8,1);
+END;
+

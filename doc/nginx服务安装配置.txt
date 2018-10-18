@@ -1,0 +1,105 @@
+安装配置地址：https://blog.csdn.net/kokjuis/article/details/78651176
+
+一、安装nginx
+  首先安装一些必要插件
+  yum install gcc-c++;
+  yum install -y pcre pcre-devel;
+  yum install -y zlib zlib-devel;
+  yum install -y openssl openssl-devel;
+  
+  tar -zxvf nginx-1.13.7.tar.gz
+  cd nginx-1.13.7
+
+  ./configure --prefix=/usr/nginx  --with-stream --with-stream_ssl_module
+  make
+  #已经在使用的nginx则不需make install，否则就覆盖了
+  make install
+
+  2：配置tcp代理功能
+
+  在nginx.conf配置文件中添加
+
+  stream配置块以及其中的server配置块。
+  
+stream {
+	upstream mysql {
+ 
+		hash $remote_addr consistent;
+		#mysql-router连接地址
+		server 172.30.12.14:7001 weight=5 max_fails=3 fail_timeout=30s;
+		server 172.30.12.17:7001 weight=5 max_fails=3 fail_timeout=30s;
+	}
+ 
+	server {
+		listen 7777;
+		#建立连接超时时间
+		proxy_connect_timeout 5s;
+		#proxy_timoute指定Nginx与客户端，以及Nginx与被代理的主机之间在两个相邻的读或写数据的操作之间的最大时间间隔。超过此时间间隔而没有数据读或写操作发生，则断开连接。
+		proxy_timeout 5m;
+		 
+		proxy_pass mysql;
+	}
+}
+
+注意设置http的端口号，默认是80可能被占用，注意修改
+
+  3：配置keepalvied跟haproxy一致的配置
+  
+  4：创建启动脚本/nginx_setup/server.sh
+  #nginx service run scripts
+
+set -m
+
+func1(){
+  p1=$1
+  if [ ${#p1} -gt 0 ]; then
+    processNum=`ps -ef | grep nginx | grep -v grep | awk '{print $2}'`
+    if [ $p1 == "start" ]; then
+          if [ ${#processNum} -gt 0 ]; then
+            echo "服务已经启动，进程号：$processNum"
+          else
+            echo "正在启动服务..."
+            ./sbin/nginx -c ./conf/nginx.conf
+            echo "启动服务成功！进程号：`ps -ef | grep haproxy | grep -v grep | awk '{print $2}'`"
+            tailLog
+          fi
+        elif [ $p1 == "stop" ]; then
+          if [ ${#processNum} -gt 0 ]; then
+            echo "正在停止服务..."
+            ##sh /home/lujun/soft/op-project/apache-tomcat-8.0.53-op-mc/bin/shutdown.sh
+            ./sbin/nginx -s stop
+            echo "服务已经停止！"
+          else
+            echo "服务已经停止！"
+          fi
+        elif [ $p1 == "status" ]; then
+          if [ ${#processNum} -gt 0 ]; then
+            echo "服务已经启动，进程号：$processNum"
+          else
+            echo "服务已关闭！"
+          fi
+        elif [ $p1 == "tail" ]; then
+          if [ ${#processNum} -gt 0 ]; then
+            tailLog
+          else
+            echo "服务没有启动，请先启动服务！"
+          fi
+        elif [ $p1 == "reload" ]; then
+          if [ ${#processNum} -gt 0 ]; then
+            ./sbin/nginx -s reload
+          else
+            echo "服务没有启动，请先启动服务！"
+          fi
+        else
+          echo "只能输入{start | status | stop | reload | tail}, 请检查！"
+        fi
+  else
+    echo "请输入{start | status | stop | reload | tail}！"
+  fi
+}
+
+tailLog(){
+  tail -f ../logs/error.log
+}
+
+func1 $1

@@ -88,9 +88,19 @@ set global slave_parallel_type='logical_clock';
 show variables like 'slave_parallel_type';
 
 设置并行数量为 4
-set global slave_parallel_workers=4;
+set global slave_parallel_workers=16;
 show variables like 'slave_parallel_workers';
 start slave;
+
+设置永久多线程复制
+在My.cnf配置文件中配置：
+slave_parallel_type=logical_clock
+slave_parallel_workers=16
+
+重启数据库即可
+
+检验：
+SHOW VARIABLES LIKE 'slave_parallel%';
 
 查看一下当前工作的线程数
 show processlist;
@@ -131,3 +141,13 @@ select @@global.tx_isolation, @@session.tx_isolation;
 
 查看字符集信息：
 show variables like "%character%";show variables like "%collation%";
+
+解决mysql时区问题：
+
+在配置文件中添加配置：
+default-time-zone='+8:00' 
+重启服务
+
+已经处理了mysql的时区‘+8:00’但是日志记录时，打印时间少8小时：
+需要在my.cnf配置文件中配置：
+log_timestamps=SYSTEM

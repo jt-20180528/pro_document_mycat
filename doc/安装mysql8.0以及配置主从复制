@@ -110,8 +110,8 @@ show processlist;
 stop slave;
 
 修改ip、账号、密码、二进制文件、位移编号、、
-CHANGE MASTER TO MASTER_HOST='192.168.0.213', MASTER_USER='t_user1', MASTER_PASSWORD='123456',master_port=3306,MASTER_LOG_FILE='mysql-bin.000002',
-MASTER_LOG_POS=155;
+CHANGE MASTER TO MASTER_HOST='192.168.0.213', MASTER_USER='t_user1', MASTER_PASSWORD='123456',master_port=3311,MASTER_LOG_FILE='mysql-bin.000074',
+MASTER_LOG_POS=895931558;
 
 启动从节点：
 start slave;

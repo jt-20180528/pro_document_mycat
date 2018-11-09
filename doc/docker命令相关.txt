@@ -1,0 +1,150 @@
+1：docker安装：
+yum update
+yum remove docker  docker-common docker-selinux docker-engine
+yum install -y yum-utils device-mapper-persistent-data lvm2
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+yum list docker-ce --showduplicates | sort -r
+yum install -y docker-ce
+
+启动并加入开机启动
+systemctl start docker
+systemctl enable docker
+
+检查版本
+docker version
+
+2：docker相关命令：
+启动：systemctl start/stop/status docker
+
+3：
+容器通过对外暴漏端口向外提供服务
+通过数据券存储和共享数据
+
+4：创建后台容器
+docker run -d -p 80:5000 容器名称
+
+指定容器存放路径（数据券）
+docker run -d -p 80:5000 --name mydockert -v /app -p 80:5000 容器名称
+
+查看容器信息
+docker inspect 容器名称
+启动容器：docker start/stop 容器名称
+删除容器：docker rm 容器名称
+
+5：搜索镜像  docker search nginx
+根据这个景象创建容器并运行：
+docker run --name mynginx -p 80:10000 -d nginx
+
+6：创建好了镜像之后，进入命令
+docker exec -it mysql bash
+启动
+docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 -d mysql
+
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
+
+默认安装Mysql的配置文件和数据文件地址：
+/etc/mysql/my.cnf
+/var/lib/mysql
+
+7：harbor安装,并没有做开机自启
+harbor安装必须要安装docker和docker-compose
+	1:安装docker
+	看最上面笔记
+	2:安装docker-compose
+	curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+	curl -L https://raw.githubusercontent.com/docker/compose/1.21.2/contrib/completion/bash/docker-compose -o /usr/local/bin/docker-compose
+	chmod +x /usr/local/bin/docker-compose
+	docker-compose --version  查看安装版本
+	3：安装harbor
+	tar xvf harbor-online-installer-v1.1.2.tgz
+	修改配置文件：
+	harbor.cfg进行修改：
+	hostname：改成主机ip
+	开始安装：执行./install.sh
+	安装成功。
+	正常访问：http://host 
+	用户名：admin 
+	密码：Harbor12345 
+	docker-compose stop/start/status
+	
+
+harbor修改密码，端口号：
+测试过在文件harbor.cfg中修改密码不起效
+修改端口号：
+	1：修改docker-compose.yml文件映射为1180端口
+	ports:
+	- 1180:80
+	2：修改common/templates/registry/config.yml文件加入1180端口
+	realm: $ui_url:1180/service/token
+	3：停止harbor，重新启动并生成配置文件
+	docker-compose stop
+	./install.sh
+	4：修改docker启动文件/usr/lib/systemd/system/docker.service，设置信任的主机与端口
+	ExecStart=/usr/bin/dockerd --insecure-registry=192.168.0.146:1180
+	5：重新启动docker
+	systemctl daemon-reload
+	systemctl restart docker.service
+	6：测试docker登陆harbor
+	docker login -u lj -p Harbor12345 192.168.0.146:1180
+	7：如果客户端docker因为存在访问harbor协议问题，也是这种方式进行修改
+
+harbor开放https协议访问，使用docker登陆并上传镜像
+	上面已经做了设置可以登陆
+
+harbor重新启动：
+docker-compose stop/status/start
+或者重启：./make/install.sh
+修改了配置文件重启：docker-compose down && ./make/install.sh
+查看容器状态：docker-compose ps
+
+docker重启之后，一定要重新启动docker-compose
+
+8：docker查看容器的日志
+	docker-compose logs -f 服务名称
+	
+9：docker-compose.yml启动容器如何定义容器名称
+
+10：如何单独停止某一个容器	
+	docker-compose stop 服务名称
+11：单独启动一个容器
+	docker-compose start 服务名称
+
+12：所有容器停止：docker-compose stop
+    docker-compose rm -f  删除所有容器
+	docker rm $(docker ps -a -q)
+	
+    docker-compose rm 服务名称
+	docker rmi $(docker images -q) 删除全部镜像
+	
+docker-compose 针对的一直是服务
+docker正对的是容器本身，id或者容器名称
+
+13：项目发布镜像报并运行容器
+	打包：mvn clean install -Dmaven.test.skip=true
+	根据Dokefile进行构建
+	docker build -t 192.168.0.146:1180/skate/config-service config-service/docker/
+	其中：192.168.0.146:1180/skate/config-service 代表构建成镜像的名称
+	config-service/docker/ 代表Dockerfile文件所在目录，如果就在本目录，则使用.代替
+	
+	登陆harbor私有镜像工厂
+	docker login -u lj -p Harbor12345 162.168.0.146:1180
+	准备把镜像推送到镜像工厂
+	如果镜像名称没有ip/账号名/项目名/版本号的格式：需要先使用tag命令转化为这种格式才能进行伤上传
+	docker tag skate/config-service 192.168.0.146:1180/skate/config-service
+	然后上传
+	docker push 192.168.0.146:1180/skate/config-service
+
+14：所有的服务配置都需要进入到容器中进行配置
+	比如mysql进行配置：docker exec -it mysql8 bash
+	安装vim: apt-get install vim
+	如果发现没有命令则：apt-get update
+	如果出现Ping的问题，则：apt-get install iputils-ping
+	
+15：查看容器暂用的内存
+	docker stats
+	查看CPU消耗最高的前10进程：
+	ps aux|head -1;ps aux|grep -v PID|sort -rn -k +3|head
+	查看内存消耗最高的前10进程：
+	ps aux|head -1;ps aux|grep -v PID|sort -rn -k +4|head
+	
+16

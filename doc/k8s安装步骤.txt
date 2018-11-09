@@ -1,0 +1,164 @@
+============================k8s安装步骤====================================
+参考网址：https://blog.csdn.net/u010563833/article/details/78393026
+http://blog.51cto.com/jonauil/2084986
+
+前提，所有节点，关闭防火墙，关闭seliunx
+systemctl stop firewalld.service
+systemctl disable firewalld.service 
+
+vi /etc/selinux/config
+SELINUX=disabled
+
+1：安装目标，环境配置
+	master 192.168.0.148
+	node1  192.168.0.150
+	node2  192.168.0.180
+	
+	可以先配置/etc/hosts域名
+	
+	master中需要配置的组件：
+	flannel,apiserver, controller-manager, scheduler,etcd 
+	node中需要配置的组件：
+	flannel, docker, kubelet, kube-proxy
+	
+2：配置master环境
+	安装etcd:
+		yum install -y etcd
+	配置etcd
+		vim /etc/etcd/etcd.conf    #修改部分内容如下
+		ETCD_LISTEN_CLIENT_URLS="http://0.0.0.0:2379"
+		ETCD_ADVERTISE_CLIENT_URLS="http://master:2379" 
+	运行etcd
+		systemctl start etcd    #启动etcd
+		systemctl enable etcd    #开机自启etcd
+	配置etcd的flannel信息
+		yum -y install flannel
+		etcdctl -C 192.168.0.148:2379 set /atomic.io/network/config '{"Network":"172.17.0.1/16"}' 
+	安装kubernetes-master
+		yum install kubernetes-master
+	修改配置文件
+		vim /etc/kubernetes/apiserver
+		KUBE_API_ADDRESS="--insecure-bind-address=0.0.0.0"
+		KUBE_ETCD_SERVERS="--etcd-servers=http://master:2379"
+		KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger
+		去掉ServiceAccount 跳过认证
+	修改全局配置文件
+		vim /etc/kubernetes/config
+		KUBE_MASTER="--master=http://master:8080"
+	启动master服务
+		systemctl start kube-apiserver kube-scheduler kube-controller-manager
+		或者查看状态
+		service kube-apiserver/kube-scheduler/kube-controller-manager status/stop/start/restart
+		for SERVICES in docker kube-apiserver kube-controller-manager kube-scheduler; do systemctl restart $SERVICES ; done
+	测试master服务
+		浏览器打开：http://192.168.0.148:8080  看到一个json串
+	
+3：配置node节点
+	安装服务
+		yum install -y docker flannel kubernetes-node
+	配置flannel
+		vim /etc/sysconfig/flanneld
+		FLANNEL_ETCD_ENDPOINTS="http://master:2379"
+		FLANNEL_ETCD_PREFIX="/atomic.io/network"
+	修改全局配置文件
+		vim /etc/kubernetes/config
+		KUBE_MASTER="--master=http://master:8080"
+	配置kubelet组件
+		vim /etc/kubernetes/kubelet
+		KUBELET_HOSTNAME="--hostname-override=node1"
+		KUBELET_API_SERVER="--api-servers=http://master:8080"
+	启动服务
+		systemctl start kubelet kube-proxy
+		for SERVICES in docker kubelet kube-proxy; do systemctl restart $SERVICES ; done
+	测试集群,在master几点上：
+		kubectl get nodes 
+
+	
+1：删除docker:
+yum list installed|grep docker 或者 rpm -qa|grep docker 
+删除安装包：
+yum –y remove docker.x86_64 
+删除镜像：
+rm -rf /var/lib/docker 
+再次搜索检查是否卸载成功
+docekr version
+再次检查是否存在
+
+2：禁用swap内存空间，发现只需要在node节点禁用就可以
+echo "vm.swappiness = 0" >> /etc/sysctl.conf
+刷新使生效
+swapoff -a && swapon -a
+sysctl -p
+
+3：kubectl相关命令
+	运行一个镜像
+	kubectl run nginx --image=192.168.32.131:5000/nginx --replicas=1 --port=9000
+	确认一个镜像
+	kubectl get deployments
+	确认pod
+	kubectl get pods
+	删除pod
+	kubectl delete pods sonarqube-1880671902-s3fdq
+	确认发现重新创建了pod，需要删除deployment
+	kubectl delete deployments nginx
+	验证已经全部删除
+	根据一个yaml文件来运行一个镜像，比如mysql.yaml见下
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: mysql
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: 192.168.32.131:5000/mysql:5.7.16
+        ports:
+        - containerPort: 3306
+          protocol: TCP
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "123456"
+
+	运行一个镜像
+		kubectl create -f mysql.yaml
+	验证
+		kubectl get pods/deployments
+	删除镜像
+		kubectl delete -f mysql.yaml
+		删除所有 kubectl delete -f yamls/
+	创建所有的yaml镜像
+		kubectl create -f yamls/
+	查看pod日志
+	kubectl logs pod名称
+	kubectl logs -f pod名称  类似于tail -f 
+		
+==============================项目部署测试===============================
+1：测试一个nginx服务，部署在k8s之上
+	下载镜像
+	docker pull nging
+	创建两个pod，并启动两个容器
+	kubectl run nginx --replicas=2 --labels="run=load-balancer-example" --image=nginx:latest --port=80
+	部署容器
+	kubectl expose deployment nginx --type=NodePort --name=example-service
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=============================安装k8s dashboard====================================
+1：检查k8s版本号  kubectl version

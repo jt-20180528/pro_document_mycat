@@ -1,0 +1,27 @@
+测试目标
+
+需要新增数据的表：
+t_transaction 1200万
+t_bet_order 1200万
+
+使用查询结果集导出：
+
+
+这个表中有唯一索引，只能从205导出
+select TENANT_CODE,USER_ID,USER_NAME,ORDERNO,BATCH_ORDERNO,GAME_ID,LOTTERY_NUMBER_ID,BET_ID,BET_SINGLE_AMOUNT,BET_MULTIPLE,BET_COUNT,BET_DIGITS,BET_NUMBER,BET_REBATE_STATUS,BET_SECRET,,BET_TIME,BET_TOTAL_AMOUNT,BET_WAY,LOTTERY_NUMBER,ORDER_STATUS,WIN_AMOUNT,WIN_COUNT,WIN_SECRET,WIN_STATUS,AGENT_REBATE_STATUS,AGENT_REBATE_AMOUNT,AWARD_STATUS,AWARD_TIME,REBATE_AMOUNT,REBATE_CHOOSE,REBATE_USER,CHASE_NUMBER_ID,CHASE_ORDER_ID,ODDS,DEVICE,LAST_MODIFIED_BY,LAST_MODIFIED_DATE,ADAPT,,PLATFORM_TYPE,ROOM_ID from t_bet_order
+into file '/root/test/t_bet_order_result.sql'
+
+----------------------------------------
+
+t_transaction结果集导出:
+
+select TENANT_CODE,USER_ID,USER_NAME,ORDERNO,BATCH_ORDERNO,CURRENT_BALANCE,PREVIOUS_BALANCE,TRANSACTION_AMOUNT,TRANSACTION_DIRECTION,TRANSACTION_SUBCLASS,TRANSACTION_TIME,TRANSACTION_TYPE,PLATFORM_TYPE from t_transaction into outfile '/home/test/t_transaction_result.sql'
+
+t_transaction结果集导入:
+load data local infile '/home/test/t_transaction_result.sql' into table t_transaction character set utf8;
+
+无法导入，因为数据是一样的
+
+导出205相应表数据：
+./mysql -h192.168.0.205 -uroot -pJt@2017 -P3306
+./mysqlhump -h192.168.0.205 -uroot -pJt@2017 -c --default-character-set=utf8 op t_transaction > '/home/test/t_transaction_205.sql'

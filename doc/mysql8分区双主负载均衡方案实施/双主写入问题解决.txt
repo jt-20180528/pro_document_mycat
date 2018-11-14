@@ -1,0 +1,59 @@
+问题记录：
+1：主从复制如何监控  
+	已解决，暂时使用liunx邮件，如果检测失败则有邮件通知，目前是1分钟检测一次Mysql存活状态以及双主复制状态，复制状态不一致则自动修复并发邮件
+	
+2：监控中间件选择    
+	zabbix 待研究
+	其他监控中间件：Nagios+zabbix+ganglia
+
+3：出现的偶尔丢单问题，前端返回成功，后端没有错误日志，数据库中也没有数据  
+	需要进一步测试
+	
+4：查询数据比较慢的问题	  
+	需要进一步测试
+	
+5：复制数据库时，出现主从复制故障 
+	已优化，多线程复制，基于row复制，只记录复制行，执行效率和数据一致性最高
+	
+6：haproxy转发效率，转发时间
+	可以看haproxy日志和指定监控UI界面
+	目前haproxy做了主备，分别是：
+	http://192.168.0.240:1080/stats
+	http://192.168.0.23:1080/stats
+	用户名/密码：admin/admin
+	23的优先级高作为主
+	
+7：mysql8.0分区索引文件和数据文件  
+	一直没有查到如何把索引文件和数据文件分开，继续待研究
+	
+8：mysql慢查询日志不记录  
+	已经解决，包括时区问题，记录增删改查超过1秒的语句，包括insert t_bet_order
+
+9：上次报表中出现不存在的分区
+	已经解决，每天都会定时创建第二天和第三天的分区脚本
+
+10-24~25夜间测试问题汇总：
+
+	1：exceptions.CommunicationsException: Communications link failure
+	百度上修改配置文件：
+	wait_timeout=31536000
+	interactive_timeout=31536000
+	项目中修改url连接：
+	&autoReconnect=true&failOverReadOnly=false
+	haproxy配置文件修改
+	项目中自动回收时间是300秒，haproxy自动回收要大于300秒
+
+	2：大量的出现could not inspect JDBC autocommit mode
+	com.hitler.service.lottery.LotteryNumberService.findByTenant(LotteryNumberService.java:94)
+	原因：
+	错误原因是数据库连接池中的连接被关闭了，但是jpa不知道这些连接对象是不可用状态，任然给他发sql指令，就会导致出现这个问题
+	解决：
+	设置：testOnborrow =true,虽然会带来很大的消耗性能，连接前会对获取的连接检查，可用才开始使用，不可用重新获取
+	可以配置testWhileIdle、timeBetweenEvictionRunsMillis来避免这种问题
+	
+	3：多关联查询全表扫描耗时长
+	使用场景很少，暂时不考虑
+	
+	4：期号表分区字段加入唯一索引造成原本符合唯一索引失效
+	跟玉伦讨论的方案：
+	添加一个缓存对象，存储3个月之内的组合对象，然后每生成一天的

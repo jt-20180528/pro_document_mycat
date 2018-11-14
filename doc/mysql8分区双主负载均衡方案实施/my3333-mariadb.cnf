@@ -1,0 +1,203 @@
+# Example MariaDB config file for very large systems.
+#
+# This is for a large system with memory of 1G-2G where the system runs mainly
+# MariaDB.
+#
+# MariaDB programs look for option files in a set of
+# locations which depend on the deployment platform.
+# You can copy this option file to one of those
+# locations. For information about these locations, do:
+# 'my_print_defaults --help' and see what is printed under
+# Default options are read from the following files in the given order:
+# More information at: http://dev.mysql.com/doc/mysql/en/option-files.html
+#
+# In this file, you can use all long options that a program supports.
+# If you want to know which options a program supports, run the program
+# with the "--help" option.
+
+# The following options will be passed to all MySQL clients
+[client]
+#password	= your_password
+port		= 3333
+socket		=/home/mysql/mariadb-10.0.33-master1/tmp/mysql.sock
+
+# Here follows entries for some specific programs
+
+# The MySQL server
+[mysqld]
+#default-time_zone = '+0:00'
+port=3333
+character-set-server=utf8
+collation-server=utf8_general_ci
+default-storage-engine=INNODB
+wait_timeout=280000
+max_connections=4000
+expire_logs_days=1
+event_scheduler=ON
+skip-external-locking
+key_buffer_size = 2048M
+max_allowed_packet = 1024M
+table_open_cache = 1024
+sort_buffer_size = 512M
+read_buffer_size = 1024M
+read_rnd_buffer_size = 1024M
+tmp_table_size=256M
+myisam_sort_buffer_size = 512M
+thread_cache_size = 256
+query_cache_size= 256M
+# Try number of CPU's*2 for thread_concurrency
+thread_concurrency = 2000
+innodb_thread_concurrency=1024
+innodb_buffer_pool_size=3G
+innodb_additional_mem_pool_size=1024M
+innodb_log_buffer_size=1024M
+sql-mode=""
+back_log=500
+
+datadir=/home/mysql/mariadb-10.0.33-master1/data
+
+bulk_insert_buffer_size=1024M
+skip-name-resolve
+
+socket=/home/mysql/mariadb-10.0.33-master1/tmp/mysql.sock
+log-error=/home/mysql/mariadb-10.0.33-master1/logs/mysql.log
+pid-file=/home/mysql/mariadb-10.0.33-master1/mysql.pid
+
+# optimize config
+max_heap_table_size=200M
+innodb_file_per_table=1  #使用innodb独立表空间
+table_open_cache=1024
+innodb_log_buffer_size=16M
+innodb_log_file_size =256M
+innodb_log_files_in_group=8
+innodb_autoextend_increment=128
+innodb_flush_log_at_trx_commit=2
+innodb_lock_wait_timeout =100
+#tmpdir		= /tmp/
+
+# Don't listen on a TCP/IP port at all. This can be a security enhancement,
+# if all processes that need to connect to mysqld run on the same host.
+# All interaction with mysqld must be made via Unix sockets or named pipes.
+# Note that using this option without enabling named pipes on Windows
+# (via the "enable-named-pipe" option) will render mysqld useless!
+# 
+#skip-networking
+
+# Replication Master Server (default)
+# binary logging is required for replication
+log-bin=mysql-bin
+log-bin-index=mysql-bin.index
+
+# required unique id between 1 and 2^32 - 1
+# defaults to 1 if master-host is not set
+# but will not function as a master if omitted
+#server_id=1
+
+
+# Replication Slave (comment out master section to use this)
+#
+# To configure this host as a replication slave, you can choose between
+# two methods :
+#
+# 1) Use the CHANGE MASTER TO command (fully described in our manual) -
+#    the syntax is:
+#
+#    CHANGE MASTER TO MASTER_HOST=<host>, MASTER_PORT=<port>,
+#    MASTER_USER=<user>, MASTER_PASSWORD=<password> ;
+#
+#    where you replace <host>, <user>, <password> by quoted strings and
+#    <port> by the master's port number (3306 by default).
+#
+#    Example:
+#
+#    CHANGE MASTER TO MASTER_HOST='125.564.12.1', MASTER_PORT=3306,
+#    MASTER_USER='joe', MASTER_PASSWORD='secret';
+#
+# OR
+#
+# 2) Set the variables below. However, in case you choose this method, then
+#    start replication for the first time (even unsuccessfully, for example
+#    if you mistyped the password in master-password and the slave fails to
+#    connect), the slave will create a master.info file, and any later
+#    change in this file to the variables' values below will be ignored and
+#    overridden by the content of the master.info file, unless you shutdown
+#    the slave server, delete master.info and restart the slaver server.
+#    For that reason, you may want to leave the lines below untouched
+#    (commented) and instead use CHANGE MASTER TO (see above)
+#
+# required unique id between 2 and 2^32 - 1
+# (and different from the master)
+# defaults to 2 if master-host is set
+# but will not function as a slave if omitted
+#server-id       = 2
+#
+# The replication master for this slave - required
+#master-host     =   <hostname>
+#
+# The username the slave will use for authentication when connecting
+# to the master - required
+#master-user     =   <username>
+#
+# The password the slave will authenticate with when connecting to
+# the master - required
+#master-password =   <password>
+#
+# The port the master is listening on.
+# optional - defaults to 3306
+#master-port     =  <port>
+#
+# binary logging - not required for slaves, but recommended
+#log-bin=mysql-bin
+#
+# binary logging format - mixed recommended 
+#binlog_format=mixed
+
+# Uncomment the following if you are using InnoDB tables
+#innodb_data_home_dir = /usr/local/mysql/data
+#innodb_data_file_path = ibdata1:2000M;ibdata2:10M:autoextend
+#innodb_log_group_home_dir = /usr/local/mysql/data
+# You can set .._buffer_pool_size up to 50 - 80 %
+# of RAM but beware of setting memory usage too high
+#innodb_buffer_pool_size = 384M
+#innodb_additional_mem_pool_size = 20M
+# Set .._log_file_size to 25 % of buffer pool size
+#innodb_log_file_size = 100M
+#innodb_log_buffer_size = 8M
+#innodb_flush_log_at_trx_commit = 1
+#innodb_lock_wait_timeout = 50
+
+#主从配置
+#binlog-do-db=op    #待同步的数据库
+#binlog-do-db=jt_test
+#binlog-do-db=op_110001
+#binlog-do-db=op_111005
+#binlog-do-db=op_111011
+#binlog-do-db=op_111101
+#binlog-do-db=op_111102
+#binlog-do-db=op_111103
+#binlog-do-db=op_111106
+#binlog-do-db=op_111107
+#binlog-do-db=op_111109
+#binlog-do-db=op_111110
+#binlog-do-db=op_111111
+#binlog-do-db=op_1111112
+#binlog-do-db=op_111113
+#binlog-do-db=op_111117
+#binlog-do-db=op_111118
+#binlog-do-db=op_111119
+#binlog-do-db=op_111120
+#binlog-do-db=op_199105
+#binlog-do-db=op_222011
+
+#log-slave-updates=1
+#binlog-ignore-db=information_schema
+#binlog-ignore-db=performance_schema
+#binlog-ignore-db=mysql
+#binlog-ignore-db=test
+#slave-skip-errors=all
+lower_case_table_names=1
+
+#it_timeout skip-grant-tables
+
+[mysqlhotcopy]
+interactive-timeout

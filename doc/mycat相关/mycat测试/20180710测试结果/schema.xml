@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+	<schema name="op" checkSQLschema="false" dataNode="dn1_op">
+	
+	<table name="t_bet_order" dataNode="dn1_op,dn2_op,dn3_op" subTables="t_bet_order$1-3" rule="mod-long"/>	
+	<!--<table name="t_bet_order" dataNode="dn1_op,dn2_op,dn3_op" rule="sharding-by-date"/>
+		-->
+	</schema>
+
+	<schema name="jt_test" checkSQLschema="false" dataNode="dn1_jt_test">
+                <!-- auto sharding by id (long) -->
+                <!--<table name="travelrecord" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
+                     -->
+        </schema>
+	<!-- <dataNode name="dn1$0-743" dataHost="localhost1" database="db$0-743"
+		/> -->
+	<dataNode name="dn1_op" dataHost="dh1_23" database="op" />
+	<dataNode name="dn2_op" dataHost="dh1_23" database="op1" />
+	<dataNode name="dn3_op" dataHost="dh1_23" database="op2" />
+
+	<dataNode name="dn1_jt_test" dataHost="dh1_23" database="jt_test" />
+	
+	<dataHost name="dh1_23" maxCon="1000" minCon="10" balance="1"
+			  writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+		<heartbeat>select user()</heartbeat>
+		<!-- can have multi write hosts -->
+		<writeHost host="23_M1" url="192.168.0.23:3306" user="t_user1"
+				   password="123456">
+			<!-- can have multi read hosts -->
+			<readHost host="23_S1" url="192.168.0.23:3308" user="t_user1" password="123456" />
+		</writeHost>
+	<!--	<writeHost host="23_M2" url="192.168.0.23:3307" user="t_user1" password="123456">
+			<readHost host="23_S2" url="192.168.0.23:3309" user="t_user1" password="123456" />
+		</writeHost>-->
+		<!-- <writeHost host="hostM2" url="localhost:3316" user="root" password="123456"/> -->
+	</dataHost>
+	<!--
+		<dataHost name="sequoiadb1" maxCon="1000" minCon="1" balance="0" dbType="sequoiadb" dbDriver="jdbc">
+		<heartbeat> 		</heartbeat>
+		 <writeHost host="hostM1" url="sequoiadb://1426587161.dbaas.sequoialab.net:11920/SAMPLE" user="jifeng" 	password="jifeng"></writeHost>
+		 </dataHost>
+
+	  <dataHost name="oracle1" maxCon="1000" minCon="1" balance="0" writeType="0" 	dbType="oracle" dbDriver="jdbc"> <heartbeat>select 1 from dual</heartbeat>
+		<connectionInitSql>alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss'</connectionInitSql>
+		<writeHost host="hostM1" url="jdbc:oracle:thin:@127.0.0.1:1521:nange" user="base" 	password="123456" > </writeHost> </dataHost>
+
+		<dataHost name="jdbchost" maxCon="1000" 	minCon="1" balance="0" writeType="0" dbType="mongodb" dbDriver="jdbc">
+		<heartbeat>select 	user()</heartbeat>
+		<writeHost host="hostM" url="mongodb://192.168.0.99/test" user="admin" password="123456" ></writeHost> </dataHost>
+
+		<dataHost name="sparksql" maxCon="1000" minCon="1" balance="0" dbType="spark" dbDriver="jdbc">
+		<heartbeat> </heartbeat>
+		 <writeHost host="hostM1" url="jdbc:hive2://feng01:10000" user="jifeng" 	password="jifeng"></writeHost> </dataHost> -->
+
+	<!-- <dataHost name="jdbchost" maxCon="1000" minCon="10" balance="0" dbType="mysql"
+		dbDriver="jdbc"> <heartbeat>select user()</heartbeat> <writeHost host="hostM1"
+		url="jdbc:mysql://localhost:3306" user="root" password="123456"> </writeHost>
+		</dataHost> -->
+</mycat:schema>

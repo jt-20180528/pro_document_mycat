@@ -1,0 +1,96 @@
+mycat配置主键自增：
+
+1：登陆mycat服务器，使用命令客户端或者第三方连接工具，注意端口号，创建一下三个函数：
+
+DROP TABLE IF EXISTS MYCAT_SEQUENCE;
+CREATE TABLE MYCAT_SEQUENCE (
+NAME VARCHAR (50) NOT NULL,
+current_value INT NOT NULL,
+increment INT NOT NULL DEFAULT 1,
+PRIMARY KEY (NAME)
+) ENGINE = INNODB ;
+
+DROP FUNCTION IF EXISTS `mycat_seq_currval`;
+DELIMITER ;;
+CREATE FUNCTION `mycat_seq_currval`(seq_name VARCHAR(50)) 
+RETURNS VARCHAR(64) CHARSET utf8
+    DETERMINISTIC
+BEGIN DECLARE retval VARCHAR(64);
+        SET retval="-999999999,null";  
+        SELECT CONCAT(CAST(current_value AS CHAR),",",CAST(increment AS CHAR) ) INTO retval 
+          FROM MYCAT_SEQUENCE WHERE NAME = seq_name;  
+        RETURN retval ; 
+END
+;;
+DELIMITER ;
+
+DROP FUNCTION IF EXISTS `mycat_seq_nextval`;
+DELIMITER ;;
+CREATE FUNCTION `mycat_seq_nextval`(seq_name VARCHAR(50)) RETURNS VARCHAR(64)
+ CHARSET utf8
+    DETERMINISTIC
+BEGIN UPDATE MYCAT_SEQUENCE  
+                 SET current_value = current_value + increment 
+                  WHERE NAME = seq_name;  
+         RETURN mycat_seq_currval(seq_name);  
+END
+;;
+DELIMITER ;
+
+
+DROP FUNCTION IF EXISTS `mycat_seq_setval`;
+DELIMITER ;;
+CREATE FUNCTION `mycat_seq_setval`(seq_name VARCHAR(50), VALUE INTEGER) 
+RETURNS VARCHAR(64) CHARSET utf8
+    DETERMINISTIC
+BEGIN UPDATE MYCAT_SEQUENCE  
+                   SET current_value = VALUE  
+                   WHERE NAME = seq_name;  
+         RETURN mycat_seq_currval(seq_name);  
+END
+;;
+DELIMITER ;
+
+2：添加一条默认的全局SEQUENCE入库【可选】：
+INSERT INTO MYCAT_SEQUENCE(NAME,current_value,increment) VALUES ('GLOBAL', 0, 1);
+需要把项目中datanode中的数据库的自增的表都要在这里添加进去，比如：
+INSERT INTO MYCAT_SEQUENCE(NAME,current_value,increment) VALUES ('T_USER', 0, 1);
+表明全部大写【注意】
+
+3：在${mycat}/config/sequence_db_conf.properties文件中把需要自增的表名和dataNode名称配置在内：
+T_USER=dn1
+TEST3=dn1
+
+4：重启mycat
+
+创建测试表：
+DROP tables IF EXISTS `test3`;
+create table test3(id int auto_increment primary key,userName varchar(32),indate DATETIME NOT NULL default '0000-00-00 00:00:00');
+
+CREATE TABLE `test1` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `address` varchar(80) DEFAULT NULL,
+  `createTime` datetime DEFAULT NULL,
+  `createUser` varchar(20) DEFAULT NULL,
+  `email` varchar(40) DEFAULT NULL,
+  `lastLoginAddr` varchar(20) DEFAULT NULL,
+  `lastLoginIp` varchar(20) DEFAULT NULL,
+  `lastLoginTime` datetime DEFAULT NULL,
+  `loginName` varchar(20) NOT NULL,
+  `loginPasswd` varchar(40) NOT NULL,
+  `logoUrl` varchar(80) DEFAULT NULL,
+  `mobilePhone` int(11) DEFAULT NULL,
+  `sex` int(11) DEFAULT NULL,
+  `telephone` varchar(11) DEFAULT NULL,
+  `updateTime` datetime DEFAULT NULL,
+  `updateUser` varchar(20) DEFAULT NULL,
+  `userName` varchar(20) NOT NULL,
+  `userStatus` tinyint(1) DEFAULT '1' COMMENT '用户状态：1正常、0禁用',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8
+
+把需要自增长的表加入主键表中：
+insert into MYCAT_SEQUENCE (name,current_value,increment) values ('T_LOTTERY_NUMBER',0,1);
+insert into MYCAT_SEQUENCE (name,current_value,increment) values ('T_USER',0,1);
+
+insert into test3 (name) values ('doubi1');

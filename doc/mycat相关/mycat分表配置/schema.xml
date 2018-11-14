@@ -1,0 +1,182 @@
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+	<schema name="op" checkSQLschema="false" dataNode="dn_op">
+		<!--分表的表-->
+		<table name="t_bet_order" primaryKey="ID" subTables="t_bet_order_2018_$1-12" dataNode="dn_op" rule="sharding-by-month_t_bet_order" />
+		<table name="t_report_game" primaryKey="ID" subTables="t_report_game_2018_$1-12" dataNode="dn_op" rule="sharding-by-month_t_report_game" />
+		<table name="t_report_team" primaryKey="ID" subTables="t_report_team_2018_$1-12" dataNode="dn_op" rule="sharding-by-month_t_report_team" />
+		<table name="t_report_team_platform" primaryKey="ID" subTables="t_report_team_platform_2018_$1-12" dataNode="dn_op" rule="sharding-by-month_t_report_team_platform" />
+		<table name="t_report_tenant" primaryKey="ID" subTables="t_report_tenant_2018_$1-12" dataNode="dn_op" rule="sharding-by-month_t_report_tenant" />
+		<table name="t_report_tenant_platform" primaryKey="ID" subTables="t_report_tenant_platform_2018_$1-12" dataNode="dn_op" rule="sharding-by-month_t_report_tenant_platform" />
+		<table name="t_report_user" primaryKey="ID" subTables="t_report_user_2018_$1-12" dataNode="dn_op" rule="sharding-by-month_t_report_user" />
+		<table name="t_report_user_platform" primaryKey="ID" subTables="t_report_user_platform_2018_$1-12" dataNode="dn_op" rule="sharding-by-month_t_report_user_platform" />
+		<table name="t_transaction" primaryKey="ID" subTables="t_transaction_2018_$1-12" dataNode="dn_op" rule="sharding-by-month_t_transaction" />
+		<table name="t_lottery_number" primaryKey="ID" subTables="t_lottery_number_2018_$1-12" dataNode="dn_op" rule="sharding-by-month_t_lottery_number" />
+		
+	
+		<!--分库分表的表-->
+		<!--
+		<table name="t_bet_order" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+        <table name="t_transaction" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+        <table name="t_report_game" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+        <table name="t_report_team" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+        <table name="t_report_team_platform" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+        <table name="t_report_tenant" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+        <table name="t_report_tenant_platform" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+        <table name="t_report_user" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+        <table name="t_report_user_platform" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+		<table name="t_lottery_number" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>	
+		<table name="t_chase_order" dataNode="dn_op_$1-19" rule="tenant_code-enum">
+			<childTable name="t_chase_number" primaryKey="id" joinKey="CHASE_ORDER_ID" parentKey="id"/>
+			<childTable name="t_chase_issue" primaryKey="id" joinKey="CHASE_ORDER_ID" parentKey="id"/>
+		</table>
+		<table name="t_user" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+		<table name="t_user_info" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+		<table name="t_user_parent" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+		<table name="t_tenant_game" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+		<table name="t_recharge_order" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+		<table name="t_bet_order_data" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+		<table name="t_play_bet_odds" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+		<table name="t_lottery_number_info" dataNode="dn_op_$1-19" rule="tenant_code-enum"/>
+		-->
+		
+		<!--全局表-->
+		<!--
+		<table name="t_game" type="global" dataNode="dn_op,dn_op_$1-19"/>
+		<table name="t_play_bet_group" type="global" dataNode="dn_op,dn_op_$1-19"/>
+		<table name="t_play" type="global" dataNode="dn_op,dn_op_$1-19"/>
+		<table name="t_play_bet" type="global" dataNode="dn_op,dn_op_$1-19"/>
+		<table name="t_play_group" type="global" dataNode="dn_op,dn_op_$1-19"/>
+		<table name="t_game_family_dtl" type="global" dataNode="dn_op,dn_op_$1-19"/>
+		<table name="t_game_group" type="global" dataNode="dn_op,dn_op_$1-19"/>
+		<table name="t_game_play" type="global" dataNode="dn_op,dn_op_$1-19"/>	
+		<table name="t_play_bet_rule" type="global" dataNode="dn_op,dn_op_$1-19"/>
+		<table name="t_play_bet_selector" type="global" dataNode="dn_op,dn_op_$1-19"/>
+		<table name="t_tenant" type="global" dataNode="dn_op,dn_op_$1-19"/>		
+		-->
+
+		<!--普通表-->
+		<!--
+		<table name="t_activity" dataNode="dn_op"/>
+		<table name="t_app_version_record" dataNode="dn_op"/>
+		<table name="t_article" dataNode="dn_op"/>
+		<table name="t_back_ip_whitelist" dataNode="dn_op"/>
+		<table name="t_bank" dataNode="dn_op"/>
+		<table name="t_bet_order_2018" dataNode="dn_op"/>
+		<table name="t_contract_bonus"  dataNode="dn_op"/>
+		<table name="t_contract_bonus_dtl"  dataNode="dn_op"/>
+		<table name="t_contract_bonus_record"  dataNode="dn_op"/>
+		<table name="t_crawler_config"  dataNode="dn_op"/>
+		<table name="t_daily_wages"  dataNode="dn_op"/>
+		<table name="t_daily_wages_dtl"  dataNode="dn_op"/>
+		<table name="t_daily_wages_record"  dataNode="dn_op"/>
+		<table name="t_demand"  dataNode="dn_op"/>
+		<table name="t_exchange_record"  dataNode="dn_op"/>
+		<table name="t_feedback"  dataNode="dn_op"/>
+		<table name="t_game_bet_quota"  dataNode="dn_op"/>
+		<table name="t_game_config"  dataNode="dn_op"/>
+		<table name="t_game_family"  dataNode="dn_op"/>
+		<table name="t_home_config"  dataNode="dn_op"/>
+		<table name="t_image"  dataNode="dn_op"/>
+		<table name="t_lottery_number_2018"  dataNode="dn_op"/>
+		<table name="t_message"  dataNode="dn_op"/>
+		<table name="t_notice"  dataNode="dn_op"/>
+		<table name="t_permission"  dataNode="dn_op"/>
+		<table name="t_permission_copy"  dataNode="dn_op"/>
+		<table name="t_permission_copy2"  dataNode="dn_op"/>
+		<table name="t_play_bet_bonus"  dataNode="dn_op"/>
+		<table name="t_play_bet_odds_dynamic"  dataNode="dn_op"/>
+		<table name="t_play_rule_config"  dataNode="dn_op"/>
+		<table name="t_quota"  dataNode="dn_op"/>
+		<table name="t_quota_record"  dataNode="dn_op"/>
+		<table name="t_rebate_group"  dataNode="dn_op"/>
+		<table name="t_rebate_group_daily"  dataNode="dn_op"/>
+		<table name="t_rebate_group_float"  dataNode="dn_op"/>
+		<table name="t_rebate_point_level"  dataNode="dn_op"/>
+		<table name="t_recharge_merchant"  dataNode="dn_op"/>
+		<table name="t_recharge_userlayer_mer"  dataNode="dn_op"/>
+		<table name="t_role"  dataNode="dn_op"/>
+		<table name="t_role_game_permission"  dataNode="dn_op"/>
+		<table name="t_role_permission"  dataNode="dn_op"/>
+		<table name="t_role_permission_copy"  dataNode="dn_op"/>
+		<table name="t_role_user"  dataNode="dn_op"/>
+		<table name="t_room"  dataNode="dn_op"/>
+		<table name="t_room_bet"  dataNode="dn_op"/>
+		<table name="t_sticky_note"  dataNode="dn_op"/>
+		<table name="t_tenant_bankcard"  dataNode="dn_op"/>
+		<table name="t_tenant_domain"  dataNode="dn_op"/>
+		<table name="t_tenant_preference"  dataNode="dn_op"/>
+		<table name="t_tenant_transaction"  dataNode="dn_op"/>
+		<table name="t_third_ag_gametype"  dataNode="dn_op"/>
+		<table name="t_third_ag_record"  dataNode="dn_op"/>
+		<table name="t_third_ag_trans_acounts"  dataNode="dn_op"/>
+		<table name="t_third_bb_record"  dataNode="dn_op"/>
+		<table name="t_third_bb_trans_acounts"  dataNode="dn_op"/>
+		<table name="t_third_ds_record"  dataNode="dn_op"/>
+		<table name="t_third_mg_record"  dataNode="dn_op"/>
+		<table name="t_third_mg_trans_acounts"  dataNode="dn_op"/>
+		<table name="t_third_preference"  dataNode="dn_op"/>
+		<table name="t_third_pt_record"  dataNode="dn_op"/>
+		<table name="t_third_pt_trans_acounts"  dataNode="dn_op"/>
+		<table name="t_third_sb_parlay_data"  dataNode="dn_op"/>
+		<table name="t_third_sb_record"  dataNode="dn_op"/>
+		<table name="t_third_syn_config"  dataNode="dn_op"/>
+		<table name="t_third_user"  dataNode="dn_op"/>
+		<table name="t_todolist"  dataNode="dn_op"/>
+		<table name="t_user_activity"  dataNode="dn_op"/>
+		<table name="t_user_balance"  dataNode="dn_op"/>
+		<table name="t_user_bankcard"  dataNode="dn_op"/>
+		<table name="t_user_layer"  dataNode="dn_op"/>
+		<table name="t_user_layer_tenant_bankcard"  dataNode="dn_op"/>
+		<table name="t_user_login"  dataNode="dn_op"/>
+		<table name="t_user_oper"  dataNode="dn_op"/>
+		<table name="t_user_operationlog"  dataNode="dn_op"/>
+		<table name="t_user_passprotect"  dataNode="dn_op"/>
+		<table name="t_user_recharge_order"  dataNode="dn_op"/>
+		<table name="t_user_registercode"  dataNode="dn_op"/>
+		<table name="t_user_transfer_order"  dataNode="dn_op"/>
+		<table name="t_user_withdraw"  dataNode="dn_op"/>
+		<table name="tb_country"  dataNode="dn_op"/>
+		<table name="tb_knight"  dataNode="dn_op"/>
+		-->
+	</schema>
+
+	<dataNode name="dn_op" dataHost="dh1_213" database="op" />
+
+	<!--
+	<dataNode name="dn_op_1" dataHost="dh1_23" database="op_110001" />
+	<dataNode name="dn_op_2" dataHost="dh1_23" database="op_111005" />
+	<dataNode name="dn_op_3" dataHost="dh1_23" database="op_111011" />
+	<dataNode name="dn_op_4" dataHost="dh1_23" database="op_111101" />
+	<dataNode name="dn_op_5" dataHost="dh1_23" database="op_111102" />
+	<dataNode name="dn_op_6" dataHost="dh1_23" database="op_111103" />
+	<dataNode name="dn_op_7" dataHost="dh1_23" database="op_111106" />
+	<dataNode name="dn_op_8" dataHost="dh1_23" database="op_111107" />
+	<dataNode name="dn_op_9" dataHost="dh1_23" database="op_111109" />
+	<dataNode name="dn_op_10" dataHost="dh1_23" database="op_111110" />
+	<dataNode name="dn_op_11" dataHost="dh1_23" database="op_111111" />
+	<dataNode name="dn_op_12" dataHost="dh1_23" database="op_1111112" />
+	<dataNode name="dn_op_13" dataHost="dh1_23" database="op_111113" />
+	<dataNode name="dn_op_14" dataHost="dh1_23" database="op_111117" />
+	<dataNode name="dn_op_15" dataHost="dh1_23" database="op_111118" />
+	<dataNode name="dn_op_16" dataHost="dh1_23" database="op_111119" />
+	<dataNode name="dn_op_17" dataHost="dh1_23" database="op_111120" />
+	<dataNode name="dn_op_18" dataHost="dh1_23" database="op_199105" />
+	<dataNode name="dn_op_19" dataHost="dh1_23" database="op_222011" />
+	-->
+	
+	<dataHost name="dh1_213" maxCon="10000" minCon="100" balance="1"
+			  writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="1000">
+		<heartbeat>select user()</heartbeat>
+		<!-- can have multi write hosts -->
+		<writeHost host="213_M1" url="192.168.0.213:3306" user="t_user1" password="123456">
+			<!-- can have multi read hosts -->
+			<readHost host="213_S1" url="192.168.0.213:3307" user="t_user1" password="123456" />
+			<readHost host="213_S2" url="192.168.0.213:3308" user="t_user1" password="123456" />
+		</writeHost>
+	
+	</dataHost>
+	
+</mycat:schema>

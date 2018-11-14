@@ -1,0 +1,34 @@
+测试op项目实现注单表、账变表、周报表根据租户分表实现：
+
+测试3个库，总共3个租户[111011=0],[111101=1],[222011=2]
+
+op ==> t_bet_order：10897064 + 1 ok
+
+op1 ==> t_bet_order：41492 +1 ok
+
+op2 ==> t_bet_order：0 +1 +1 ok
+
+连接mycat上查询：SELECT COUNT(1) FROM `t_bet_order`
+结果为：10938560 = 10897064 + 1 + 41492 + 1 +1 +1
+
+再3个库中分别创建表:
+t_bet_order
+t_transaction 	
+t_report_game
+t_report_team
+t_report_team_platform
+t_report_tenant
+t_report_tenant_platform
+t_report_user
+t_report_user_platform
+
+在schame.xml中配置：
+
+<table name="t_report_team" dataNode="dn1_op,dn2_op,dn3_op" rule="tenant_code-enum"/>
+<table name="t_report_team_platform" dataNode="dn1_op,dn2_op,dn3_op" rule="tenant_code-enum"/>
+<table name="t_report_tenant" dataNode="dn1_op,dn2_op,dn3_op" rule="tenant_code-enum"/>
+<table name="t_report_tenant_platform" dataNode="dn1_op,dn2_op,dn3_op" rule="tenant_code-enum"/>
+<table name="t_report_user" dataNode="dn1_op,dn2_op,dn3_op" rule="tenant_code-enum"/>
+<table name="t_report_user_platform" dataNode="dn1_op,dn2_op,dn3_op" rule="tenant_code-enum"/>
+<table name="t_report_team" dataNode="dn1_op,dn2_op,dn3_op" rule="tenant_code-enum"/>
+

@@ -1,0 +1,209 @@
+1：分库分表中，根据现有规则划分，需要补充其他表作为全局表的sql：
+
+select gg.GROUP_NAME as gameGroupName,tg.GAME_ID as gameId,tg.NAME as gameName,CONCAT(g.CYCLE_TIME,g.CYCLE_TIME_UNIT) as cycleTime,g.LOTTERY_TYPE as source from t_tenant_game tg LEFT JOIN t_game_family_dtl gfd ON gfd.GAME_ID = tg.GAME_ID LEFT JOIN t_game g ON g.id = tg.GAME_ID LEFT JOIN t_game_group gg ON gg.id = g.GAME_GROUP_ID where  gfd.`status`= 1 and tg.TENANT_CODE='111111' and gfd.GAME_FAMILY_CODE= 'CT' ORDER BY gg.DEEP,g.DEEP
+
+t_tenant_game：分库表  315
+t_game_family_dtl：普通表  79
+t_game：全局表
+t_game_group：普通表  10
+
+修改：t_game_family_dtl和t_game_group改为全局表
+
+2：
+
+SELECT g.GAME_NAME gameName, CASE WHEN LENGTH(u.NICK_NAME)=0 THEN u.USER_NAME ELSE u.NICK_NAME END userName,    u.USER_ICON userIcon, ROUND(b.WIN_AMOUNT, 2) winAmount     FROM t_bet_order b     LEFT JOIN t_game g ON g.id = b.GAME_ID     LEFT JOIN t_user u ON u.id = b.USER_ID     WHERE     b.TENANT_CODE = ?    AND b.BET_TIME >= ?     AND b.WIN_STATUS = 1 AND b.ORDER_STATUS = 0      AND u.ACCOUNT_TYPE in (1,2)  AND b.win_amount >= ? GROUP BY b.GAME_ID,b.WIN_AMOUNT ORDER BY BET_TIME DESC LIMIT ?
+
+t_bet_order：分库表
+t_game：全局表
+t_user：分库表
+
+这种情况只能添加注解：/*!mycat: sql=select count(1) from t_bet_order where TENANT_CODE = '111101'*/
+
+因为设置了默认节点是12所以当前找不到这个值就去找索引为12的节点，是dn_op_111113
+
+3：
+
+SELECT CASE WHEN gfd.GAME_FAMILY_CODE= 'KG' AND gg.id!=9 THEN gfd.GAME_FAMILY_CODE WHEN gfd.GAME_FAMILY_CODE= 'KG' AND gg.id=9 THEN 'PC28'  WHEN gfd.GAME_FAMILY_CODE= 'KG' AND gg.id=2 THEN 'SZP' ELSE gfd.GAME_FAMILY_CODE END gameFamilyCode,  tg.TENANT_CODE, tg.GAME_ID as id,tg.`NAME` as name,gg.GROUP_NAME as groupName, CONCAT(g.CYCLE_TIME,g.CYCLE_TIME_UNIT) as cycleTime,g.LOTTERY_TYPE as source FROM t_tenant_game tg LEFT JOIN t_game_family_dtl gfd ON gfd.GAME_ID = tg.GAME_ID LEFT JOIN t_game g ON g.id = tg.GAME_ID LEFT JOIN t_game_group gg ON gg.id = g.GAME_GROUP_ID where gfd.`status`= 1  ORDER BY gfd.GAME_FAMILY_CODE, gg.DEEP, g.DEEP
+
+t_tenant_game：分库表  315
+t_game_family_dtl：普通表  79
+t_game：全局表
+t_game_group：普通表 10
+
+修改：t_game_family_dtl和t_game_group改为全局表，并添加TENANT_CODE过滤字段，已添加
+
+4：
+
+select p.id as pid,p.`NAME` as playName,CONCAT(tg.GAME_ID,'') as gameId from t_play p LEFT JOIN t_play_group pg ON pg.id = p.PLAY_GROUP_ID LEFT JOIN t_game_play gp on gp.PLAY_ID = p.id LEFT JOIN t_tenant_game tg ON tg.GAME_ID = gp.GAME_ID LEFT JOIN t_game_family_dtl gfd ON gfd.GAME_ID = tg.GAME_ID LEFT JOIN t_game g ON g.id = tg.GAME_ID LEFT JOIN t_game_group gg ON gg.id = g.GAME_GROUP_ID where p.ENABLED = 1 and pg.id != 3 AND gfd.`status`= 1 and tg.TENANT_CODE='111111' and gfd.GAME_FAMILY_CODE= 'CT' ORDER BY gg.DEEP,g.DEEP,p.DEEP
+
+t_play：全局表
+t_play_group：全局表
+t_game_play：普通表
+t_tenant_game：分库表
+t_game_family_dtl：全局表
+t_game：全局表
+t_game_group：全局表
+
+修改：t_game_play为全局表
+
+5:
+
+select distinct pbr.id as ruleId, pbr.DEFAULT_POSITION as defaultPosition,pbr.IS_ARBITRARILY as isArbitrarily,pbr.MAXCHOSEN as maxchosen,pbr.MINCHOSEN as minchosen,pbr.POSITION as position,pbr.SELECTOR_TYPE as selectorType,pbr.SEPARATER as separater, CONCAT(pb.id,'') as bid from t_play_bet_rule pbr RIGHT JOIN t_play_bet pb on pbr.id = pb.BET_RULE_ID LEFT JOIN t_play_bet_group pbg ON pbg.id = pb.BET_GROUP_ID LEFT JOIN t_play p on pbg.PLAY_ID = p.id LEFT JOIN t_play_group pg ON pg.id = p.PLAY_GROUP_ID LEFT JOIN t_game_play gp on gp.PLAY_ID = p.id LEFT JOIN t_tenant_game tg ON tg.GAME_ID = gp.GAME_ID LEFT JOIN t_game_family_dtl gfd ON gfd.GAME_ID = tg.GAME_ID LEFT JOIN t_game g ON g.id = tg.GAME_ID LEFT JOIN t_game_group gg ON gg.id = g.GAME_GROUP_ID where p.ENABLED = 1 and pb.ENABLED = 1 and pg.id != 3 AND gfd.`status`= 1 and tg.TENANT_CODE=? and gfd.GAME_FAMILY_CODE= 'CT'
+
+t_play_bet_rule：
+t_play_bet：全局表
+t_play_bet_group：全局表
+t_play：全局表
+t_play_group：全局表
+t_game_play：全局表
+t_tenant_game：分库表
+t_game_family_dtl：全局表
+t_game：全局表
+t_game_group：全局表
+
+修改：t_play_bet_rule为全局表
+
+6:
+
+SELECT pbs.id, pbs.TITLE AS title, pbs.`NO` AS no, pbs.MAXCHOSEN AS maxchosen, pbs.MINCHOSEN AS minchosen
+	, CONCAT(pbr.id, '') AS ruleId
+FROM t_play_bet_selector pbs
+	LEFT JOIN t_play_bet_rule pbr ON pbs.BET_RULE_ID = pbr.id
+	LEFT JOIN t_play_bet pb ON pbr.id = pb.BET_RULE_ID
+	LEFT JOIN t_play_bet_group pbg ON pbg.id = pb.BET_GROUP_ID
+	LEFT JOIN t_play p ON pbg.PLAY_ID = p.id
+	LEFT JOIN t_play_group pg ON pg.id = p.PLAY_GROUP_ID
+	LEFT JOIN t_game_play gp ON gp.PLAY_ID = p.id
+	LEFT JOIN t_tenant_game tg ON tg.GAME_ID = gp.GAME_ID
+	LEFT JOIN t_game_family_dtl gfd ON gfd.GAME_ID = tg.GAME_ID
+	LEFT JOIN t_game g ON g.id = tg.GAME_ID
+	LEFT JOIN t_game_group gg ON gg.id = g.GAME_GROUP_ID
+WHERE p.ENABLED = 1
+	AND pb.ENABLED = 1
+	AND pg.id != 3
+	AND gfd.`status` = 1
+	AND tg.TENANT_CODE = '111111'
+	AND gfd.GAME_FAMILY_CODE = 'CT'
+GROUP BY pbs.id, pbs.MAXCHOSEN, pbs.MINCHOSEN, pbs.`NO`, pbs.TITLE, CONCAT(pbr.id, NULL)
+
+t_play_bet_selector：
+t_play_bet_rule：全局表
+t_play_bet：全局表
+t_play_bet_group：全局表
+t_play：全局表
+t_play_group：全局表
+t_game_play：全局表
+t_tenant_game：分库表
+t_game_family_dtl：全局表
+t_game：全局表
+t_game_group：全局表
+
+修改：t_play_bet_selector：为全局表
+
+7：
+
+SELECT pbo.id, pbo.`NO` AS NO, pbo.BET_DIGITS AS digits, pbo.ODDS AS odds, pb.id AS betId
+	, pb.`NAME` AS betName, CONCAT(p.id, '') AS pid, g.id AS gameId
+FROM t_play_bet_odds pbo
+	LEFT JOIN t_play_bet pb ON pbo.BET_ID = pb.id
+	LEFT JOIN t_play_bet_group pbg ON pbg.id = pb.BET_GROUP_ID
+	LEFT JOIN t_play p ON p.id = pbg.PLAY_ID
+	LEFT JOIN t_game_family_dtl gfd ON gfd.GAME_ID = pbo.GAME_ID
+	LEFT JOIN t_game g ON g.id = pbo.GAME_ID
+	LEFT JOIN t_game_group gg ON gg.id = g.GAME_GROUP_ID
+	LEFT JOIN t_tenant_game tg ON tg.TENANT_CODE = pbo.TENANT_CODE
+		AND tg.GAME_ID = pbo.GAME_ID
+WHERE pb.ENABLED = 1
+	AND p.ENABLED = 1
+	AND p.PLAY_GROUP_ID = 3
+	AND gfd.`status` = 1
+	AND gg.id != 9
+	AND tg.TENANT_CODE = '111111'
+	AND gfd.GAME_FAMILY_CODE = 'KG'
+GROUP BY pb.id, CONCAT(p.id, NULL), pbo.`NO`, pbo.BET_DIGITS, pbo.ODDS, pbo.id, pb.`NAME`, g.id
+
+t_play_bet_odds：
+t_play_bet：全局表
+t_play_bet_group：全局表
+t_play：全局表
+t_game_family_dtl：全局表
+t_game：全局表
+t_game_group：全局表
+t_tenant_game：分库表
+
+修改：t_play_bet_odds：为分库表
+
+8:
+
+select t.id,t.CREATED_BY,t.CREATED_DATE,t.LAST_MODIFIED_BY,t.LAST_MODIFIED_DATE,t.TENANT_CODE,t.TENANT_NAME,t.REMARK,t.ENABLED,t.TOKEN from t_tenant t,t_tenant_game g where t.TENANT_CODE = g.TENANT_CODE and g.GAME_ID = 3 and t.ENABLED = 1
+
+t_tenant：
+t_tenant_game：分库表
+
+修改：t_tenant：为全局表
+
+9：
+
+select t.id,t.CREATED_BY,t.CREATED_DATE,t.LAST_MODIFIED_BY,t.LAST_MODIFIED_DATE,t.TENANT_CODE,t.TENANT_NAME,t.REMARK,t.ENABLED,t.TOKEN from t_tenant t,t_tenant_game g where t.TENANT_CODE = g.TENANT_CODE and g.GAME_ID = 3 and t.ENABLED = 1
+
+已经修改了表t_tenant：为全局表，所以暂时不存在问题
+
+10：
+
+select i.MISS_TIMES from t_lottery_number t  LEFT JOIN t_lottery_number_info i  on t.id=i.id  where t.TENANT_CODE = '111111' and t.GAME_ID = 17  and t.OPEN_TIME < '2018-08-07 11:27:00' and t.OPEN_TIME > '2018-08-07 11:17:00' and i.MISS_TIMES is NOT NULL order by t.OPEN_TIME desc limit 0,1
+
+t_lottery_number：分库表
+t_lottery_number_info：父子表【也需要根据TENANT_CODE字段进行分库存储】
+
+11：
+
+insert into t_lottery_number_info (AWARD_COST, BET_ORDERS, CALCULATE_COST, HOT_COLD, LOTTERY_DELAY_TIME, MISS_TIMES, REBATE_COST, id) values (?, ?, ?, ?, ?, ?, ?, ?)
+
+已经划分了t_lottery_number_info表为父子表，父表根据TENANT_CODE字段进行分片，需要添加TENANT_CODE写入记录。
+
+12:
+
+ select i.MISS_TIMES from t_lottery_number t  LEFT JOIN t_lottery_number_info i  on t.id=i.id  where t.TENANT_CODE = ? and t.GAME_ID = ?  and t.OPEN_TIME < ? and t.OPEN_TIME > ? and i.MISS_TIMES is NOT NULL order by t.OPEN_TIME desc limit 0,1
+ 
+添加注解解决
+
+13：
+
+SELECT tbr.id,tbr.USER_ID as userId ,tbr.USER_NAME as userName,tbr.AGENT_REBATE_STATUS as agentRebateStatus, tbr.AWARD_STATUS as awardStatus,tbr.AWAR     D_TIME as awardTime,tbr.BET_SINGLE_AMOUNT as betSingleAmount, tbr.BET_MULTIPLE as betMultiple,tbr.BET_COUNT as betCount,tbr.BET_DIGITS as betDigits,tbr.BET_NUMBE     R as betNumber, tbr.BET_REBATE_STATUS as betRebateStatus,tbr.BET_TIME as betTime,tbr.BET_TOTAL_AMOUNT as betTotalAmount, tbr.BET_WAY as betWay,tbr.ORDERNO as ord     erno,tbr.CHASE_NUMBER_ID as chaseNumberId,tbr.CHASE_ORDER_ID as chaseOrderId, tbr.LOTTERY_NUMBER as lotteryNumber,tbr.ORDER_STATUS as orderStatus,tbr.REBATE_AMOU     NT as rebateAmount, tbr.REBATE_CHOOSE as rebateChoose,tbr.REBATE_USER as rebateUser,tbr.WIN_AMOUNT as winAmount,tbr.WIN_COUNT as winCount, tbr.WIN_STATUS as winS     tatus,tbr.BET_ID as betId,tbr.LOTTERY_NUMBER_ID as lotteryNumberId,tbr.TENANT_CODE as tenantCode, tbr.GAME_ID as gameId  FROM t_bet_order tbr LEFT JOIN t_user u      on u.id = tbr.USER_ID WHERE u.ACCOUNT_TYPE in (1,2) and tbr.TENANT_CODE = ? and tbr.ORDER_STATUS = ?  and tbr.LOTTERY_NUMBER_ID= ?  and tbr.USER_NAME in  ('agent     002') 
+
+t_bet_order：分库表
+t_user：分库表
+
+添加注解
+
+14：
+
+SELECT tbr.id,tbr.USER_ID as userId ,tbr.USER_NAME as userName,tbr.AGENT_REBATE_STATUS as agentRebateStatus, tbr.AWARD_STATUS as awardStatus,tbr.AWARD_TIME as awardTime,tbr.BET_SINGLE_AMOUNT as betSingleAmount, tbr.BET_MULTIPLE as betMultiple,tbr.BET_COUNT as betCount,tbr.BET_DIGITS as betDigits,tbr.BET_NUMBER as betNumber, tbr.BET_REBATE_STATUS as betRebateStatus,tbr.BET_TIME as betTime,tbr.BET_TOTAL_AMOUNT as betTotalAmount, tbr.BET_WAY as betWay,tbr.ORDERNO as orderno,tbr.CHASE_NUMBER_ID as chaseNumberId,tbr.CHASE_ORDER_ID as chaseOrderId, tbr.LOTTERY_NUMBER as lotteryNumber,tbr.ORDER_STATUS as orderStatus,tbr.REBATE_AMOUNT as rebateAmount, tbr.REBATE_CHOOSE as rebateChoose,tbr.REBATE_USER as rebateUser,tbr.WIN_AMOUNT as winAmount,tbr.WIN_COUNT as winCount, tbr.WIN_STATUS as winStatus,tbr.BET_ID as betId,tbr.LOTTERY_NUMBER_ID as lotteryNumberId,tbr.TENANT_CODE as tenantCode, tbr.GAME_ID as gameId  FROM t_bet_order tbr LEFT JOIN t_user u on u.id = tbr.USER_ID WHERE u.ACCOUNT_TYPE in (1,2) and tbr.TENANT_CODE = ? and tbr.ORDER_STATUS = ?  and tbr.LOTTERY_NUMBER_ID= ? and mycatAnnotation= ? and tbr.USER_NAME in  ('agent002')
+
+修改mycat代码注解解析代码，已经解决。
+
+15：
+
+org.springframework.dao.InvalidDataAccessApiUsageException: org.hibernate.QueryException: Not all named parameters have been set: [sql] [/*!mycat:sql=select 1 from t_lottery_number where TENANT_CODE = :tenantCode*/select i.MISS_TIMES from t_lottery_number t  LEFT JOIN t_lottery_number_info i  on t.id=i.id  where t.TENANT_CODE = :tenantCode and t.GAME_ID = :gameId  and t.OPEN_TIME < :openTime and t.OPEN_TIME > :rangeTime and i.MISS_TIMES is NOT NULL order by t.OPEN_TIME desc limit 0,1]; nested exception is java.lang.IllegalArgumentException: org.hibernate.QueryException: Not all named parameters have been set: [sql] [/*!mycat:sql=select 1 from t_lottery_number where TENANT_CODE = :tenantCode*/select i.MISS_TIMES from t_lottery_number t  LEFT JOIN t_lottery_number_info i  on t.id=i.id  where t.TENANT_CODE = :tenantCode and t.GAME_ID = :gameId  and t.OPEN_TIME < :openTime and t.OPEN_TIME > :rangeTime and i.MISS_TIMES is NOT NULL order by t.OPEN_TIME desc limit 0,1]
+
+[/*!mycat:sql=select 1 from t_lottery_number where TENANT_CODE = :tenantCode*/select i.MISS_TIMES from t_lottery_number t  LEFT JOIN t_lottery_number_info i  on t.id=i.id  where t.TENANT_CODE = :tenantCode and t.GAME_ID = :gameId  and t.OPEN_TIME < :openTime and t.OPEN_TIME > :rangeTime and i.MISS_TIMES is NOT NULL order by t.OPEN_TIME desc limit 0,1]
+
+/*!mycat:sql=select 1 from t_lottery_number where TENANT_CODE = 1111112*/select i.MISS_TIMES from t_lottery_number t  LEFT JOIN t_lottery_number_info i  on t.id=i.id  where t.TENANT_CODE = 1111112 and t.GAME_ID = 17 and t.OPEN_TIME < 2018-08-08 18:46:00.0 and t.OPEN_TIME > 2018-08-08 18:46:00.0 and i.MISS_TIMES is NOT NULL order by t.OPEN_TIME desc limit 0,1]
+
+修改mycat注解代码解析，已经解决。
+
+16：
+
+update t_lottery_number_info set BET_AMOUNT_MAX=?, BET_MONEY_TOTAL=?, HOT_COLD=?, LOTTERY_DELAY_TIME=?, MISS_TIMES=?, TENANT_CODE=? where id=?
+com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Sharding column can't be updated T_LOTTERY_NUMBER_INFO->TENANT_CODE
+
+分库表没有把分表字段作为查询条件，导致无法定位到哪个表，把分表字段作为过滤条件即可。
+
+
+
+
+
+
+
+
+

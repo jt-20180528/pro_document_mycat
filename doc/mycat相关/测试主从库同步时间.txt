@@ -1,0 +1,50 @@
+./mysqld --initialize --user=mysql --datadir=/home/mysql/mysql-8.0.11-slave1/data --basedir=/home/mysql/mysql-8.0.11-slave1
+
+root@localhost: UWDNaD1s1v;l
+
+./mysqld_safe --defaults-file=/etc/my3306-master.cnf &
+
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
+
+CREATE USER 'data_check'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
+
+GRANT ALL ON *.* TO 't_user1'@'%';
+
+grant replication slave on *.* to 't_user1'@'%' identified by '123456';
+flush privileges; 
+
+MASTER_PASSWORD='123456',master_port=3306,MASTER_LOG_FILE='/home/mysql/mysql-8.0.11-master/logs/mysql-bin',  
+MASTER_LOG_POS=18217568; 
+
+change master to master_host='192.168.0.138',master_user='t_user1',master_password='123456',master_port=3306,master_log_file='mysql-bin.000001',master_log_pos=312;
+
+./mysql -uroot -port=3307 -p -S ../tmp/mysql.sock
+
+CHANGE MASTER TO MASTER_LOG_FILE='mysql-bin.000067',MASTER_LOG_POS=238333;
+
+先进入slave中执行:"slave stop;"来停止从库同步； 
+
+再去master中执行:"flush logs;"来清空日志； 
+
+然后在master中执行:"show master status;"查看下主库的状态，主要是日志的文件和position； 
+
+然后回到slave中，执行:"CHANGE MASTER TO MASTER_LOG_FILE='log-bin.000004',MASTER_LOG_POS=106;"，文件和位置对应master中的; 
+
+最后在slave中执行:"slave start;"来启动同步。
+
+https://www.cnblogs.com/kevingrace/p/6278200.html
+
+GRANT SELECT ON *.* TO 'data_check'@'%' IDENTIFIED BY '123456';
+
+mk-table-checksum h=192.168.0.143,u=data_check,p=123456,P=3306 -djt_test --count;
+mk-table-checksum h=192.168.0.143,u=data_check,p=123456,P=3307 -djt_test --count;
+
+mk-table-checksum h=192.168.0.143,u=data_check,p=123456,P=3306 h=192.168.0.143,u=data_check,p=123456,P=3308 -djt_test --count;
+
+mk-table-checksum h=192.168.0.143,u=data_check,p=123456,P=3306 h=192.168.0.143,u=data_check,p=123456,P=3307 h=192.168.0.143,u=data_check,p=123456,P=3308 h=192.168.0.149,u=data_check,p=123456,P=3306 -djt_test --count;
+
+mk-table-checksum h=192.168.0.143,u=data_check,p=123456,P=3306 h=192.168.0.149,u=data_check,p=123456,P=3306 -djt_test --count;
+
+
+https://blog.csdn.net/jack85986370/article/details/51559232
+主从库读写分离配置

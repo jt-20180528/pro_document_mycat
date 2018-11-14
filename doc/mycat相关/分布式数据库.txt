@@ -1,0 +1,3 @@
+博客上介绍的分布式方案：
+mysql router、maxscale、arkproxy、google spanner&F1、巨山数据库、TiDB
+不采用分布式方案：share nothing

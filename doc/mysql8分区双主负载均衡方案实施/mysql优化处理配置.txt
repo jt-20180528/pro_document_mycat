@@ -1,0 +1,25 @@
+1：url连接配置
+db.url =jdbc:mysql://192.168.0.10:3399/op?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=CONVERT_TO_NULL&autoReconnect=true&failOverReadOnly=false&allowMultiQueries=true&useSSL=false
+
+2：配置文件中，高并发出现断链时的解决方案：
+<!--removeAbandoned: 是否自动回收超时连接 -->
+		<property name="removeAbandoned" value="true" />
+		<!--removeAbandonedTimeout: 超时时间(以秒数为单位) -->
+		<property name="removeAbandonedTimeout" value="300" />
+		<!--maxWait: 超时等待时间以毫秒为单位 60000毫秒/1000等于60秒 -->
+		<property name="maxWait" value="${db.maxWait}" />
+		<property name="defaultAutoCommit">
+			<value>true</value>
+		</property>
+		<property name="validationQuery" value="select 1" />
+		<!-- 是否缓存preparedStatement，也就是PSCache。PSCache对支持游标的数据库性能提升巨大，比如说oracle。在mysql下建议关闭。 -->
+		<property name="poolPreparedStatements" value="false" />
+		<property name="maxOpenPreparedStatements" value="${db.maxOpenPreparedStatements}" />
+
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<property name="timeBetweenEvictionRunsMillis" value="15000" />
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒, 默认30s -->
+		<!-- <property name="minEvictableIdleTimeMillis" value="120000" /> -->
+		<property name="testWhileIdle" value="true" />
+		<property name="testOnBorrow" value="true" />
+		<property name="testOnReturn" value="false" />

@@ -1,0 +1,150 @@
+一：测试双主环境出现的问题
+  core：
+  1：大量的==》投注失败! 亲，已封盘不允许投注喔！
+  2：t_bet_order_data表中写入数据出现主键重复，会导致下面这个问题
+  3：执行派奖--异步写data表跟update注单表异常,开始做回滚处理
+  
+  mc:
+  1：主要是接收投注请求，主要有ct,kg投注请求失败！normalDetail
+  2：could not inspect JDBC autocommit mode; nested exception is org.hibernate.exception.GenericJDBCException: could not inspect JDBC autocommit mode
+  
+  open:
+  1：大量的封盘事件异常.
+binlog_rows_query_log_events
+
+(product)root@localhost [(none)]> show variables like 'binlog_rows_query_log_events';
+
+查看mysql官方文档，发现 INFORMATION_SCHEMA.partitions的TABLE_ROWS字段其实提供的就是一个大概数值。附上官方文档说明
+
+ TABLE_ROWS: The number of table rows in the partition.
+
+For partitioned InnoDB tables, the row count given in the TABLE_ROWS column is only an estimated value used in SQL optimization, and may not always be exact. 
+
+
+10-24~25夜间测试问题汇总：
+
+	1：exceptions.CommunicationsException: Communications link failure
+	百度上修改配置文件：
+	wait_timeout=31536000
+	interactive_timeout=31536000
+	项目中修改url连接：
+	&autoReconnect=true&failOverReadOnly=false
+	haproxy配置文件修改
+	项目中自动回收时间是300秒，haproxy自动回收要大于300秒
+
+	2：大量的出现could not inspect JDBC autocommit mode
+	com.hitler.service.lottery.LotteryNumberService.findByTenant(LotteryNumberService.java:94)
+	原因：
+	错误原因是数据库连接池中的连接被关闭了，但是jpa不知道这些连接对象是不可用状态，任然给他发sql指令，就会导致出现这个问题
+	解决：
+	设置：testOnborrow =true,虽然会带来很大的消耗性能，连接前会对获取的连接检查，可用才开始使用，不可用重新获取
+	可以配置testWhileIdle、timeBetweenEvictionRunsMillis来避免这种问题
+	
+	3：多关联查询全表扫描耗时长
+	全表扫面场景很少，暂时不做处理
+	
+	4：期号表分区字段加入唯一索引造成原本符合唯一索引失效
+	换成开奖时间open_time作为分区字段，不影响组合唯一索引
+	
+	5：压力测试发现丢单问题
+	
+10-25~26夜间测试问题汇总：
+
+	1：java.lang.ArrayIndexOutOfBoundsException: 3
+	at com.hitler.core.aop.RedisLockInterceptor.lock(RedisLockInterceptor.java:66)
+	[RedisLock]key:RedisLock_betting_28823获取失败！
+	at com.hitler.lottery.calc.LotteryCal.betCalc(LotteryCal.java:148)
+	at com.hitler.lottery.calc.BetOrderCalcEventWorker$AwardTask.call(BetOrderCalcEventWorker.java:169)
+	java.lang.ArrayIndexOutOfBoundsException: null
+	
+	2：at com.hitler.lottery.calc.LimitAmount.limit(LimitAmount.java:69)
+	at com.hitler.lottery.calc.BetOrderCalcEventWorker.execute
+	限红处理异常
+	java.lang.NullPointerException: null
+	at com.hitler.lottery.calc.LimitAmount.limit(LimitAmount.java:53)
+	
+	3:at com.hitler.lottery.event.AwardEvent.sendWinTipMessage(AwardEvent.java:375)
+	at com.hitler.lottery.event.AwardEvent.access$1100(AwardEvent.java:67)
+	[开奖:26,20181026-197]推送中奖提示消息失败
+	java.lang.NullPointerException: null
+	
+	4:at com.hitler.lottery.event.AwardEvent$SchemaLotteryEvent.run(AwardEvent.java:268)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	[开奖:26,20181026-197,111011]派奖异常！！！
+	java.lang.NullPointerException: null
+	
+	5：com.hitler.io.UserLoginSuccessQueueListener - 登录成功队列异常
+	java.lang.NullPointerException: null
+    at com.hitler.service.user.LoginService.onLoginSuccess(LoginService.java:193)
+	com.hitler.service.user.LoginService$$EnhancerBySpringCGLIB$$8572f8c1.onLoginSuccess(<generated>)
+    at com.hitler.io.UserLoginSuccessQueueListener.onMessage(UserLoginSuccessQueueListener.java:27)
+	
+	6：NcBetOrderController - key:RedisLock_betting_28964获取失败！
+	com.hitler.core.exception.RedisLockException: key:RedisLock_betting_28964获取失败！
+    at com.hitler.core.aop.RedisLockInterceptor.lock(RedisLockInterceptor.java:67)
+	
+	7：com.hitler.dubbo.WebFilter - 拦截过滤错误:
+	com.hitler.web.controller.nc.play.NcBetOrderController.kgBet(NcBetOrderController.java:135)
+	
+	8：JsonMappingException: (was java.lang.NullPointerException) (through reference chain: com.hitler.core.dto.ResultDTO["re      sult"]->com.hitler.core.dto.ListReturnDTO["content"]->java.util.ArrayList[0]->com.hitler.table.dto.mobile.play.UserBetOrderDTO["betName"]
+	java.lang.NullPointerException: null
+	at com.hitler.table.dto.mobile.play.UserBetOrderDTO.getBetName(UserBetOrderDTO.java:153)
+	
+	9：com.hitler.dubbo.WebFilter - 拦截过滤错误:
+	com.alibaba.dubbo.rpc.RpcException: Invoke remote method timeout. method: page
+	com.hitler.web.controller.nch5.gamerecord.NcH5BetRecordController.queryRecordList(NcH5BetRecordController.java:130
+	
+	10:at com.hitler.lottery.event.AwardEvent$SchemaLotteryEvent.run(AwardEvent.java:192)
+	cause: Server side(192.168.0.222,20883) threadpool is exhausted ,detail msg:Thread pool is EXHAUSTED! Thread Name: DubboServerHandler-192.168.0.222:20883, Pool Size: 200 (active: 200, core: 200, max: 200, largest: 200), Task: 108213 (completed: 108013), Executor status:(isShutdown:false, isTerminated:false, isTerminating:false), in dubbo://192.168.0.222:20883
+	
+	 com.alibaba.dubbo.remoting.RemotingException: Server side(192.168.0.222,20883) threadpool is exhausted ,detail msg:Thread pool is EXHAUSTED! Thread Name: DubboServerHandler-192.168.0.222:20883, Pool Size: 200 (active: 200, core: 200, max: 200, largest: 200), Task: 108213 (completed: 108013), Executor status:(isShutdown:false, isTerminated:false, isTerminating:false), in dubbo://192.168.0.222:20883!
+	
+	11:]投注失败!写入缓存失败：
+	
+10-26~27夜间测试问题汇总：
+	1：[派奖-6] ERROR com.hitler.lottery.calc.LotteryCal 
+	java.lang.ArrayIndexOutOfBoundsException: null
+	获取数组下标使用了isEntity方法，并不够严谨，导致获取空集合对象下标出错
+	
+	2：[派奖-19] ERROR com.hitler.lottery.calc.BetOrderCalcEventWorker
+	java.util.concurrent.ExecutionException: java.lang.NullPointerException
+	at com.hitler.lottery.calc.BetOrderCalcEventWorker.execute(BetOrderCalcEventWorker.java:115)
+	com.hitler.lottery.event.AwardEvent$SchemaLotteryEvent.run(AwardEvent.java:219)
+	设置了返回结果的线程是60秒时候获取，但是任然没有取到数据报空指针，
+	原因是dubbo调用超时，刚好也是60秒，dubbo调用超时
+	
+	3：com.hitler.lottery.event.AwardEvent - [开奖:26,20181027-036]推送中奖提示消息失败
+	java.lang.NullPointerException: null
+	com.hitler.lottery.event.AwardEvent.sendWinTipMessage(AwardEvent.java:361)
+	是因为问题：2导致dubbo处理超时，返回对象注单集合有问题，导致获取盈利金额出现控指正
+	
+	4：com.hitler.lottery.calc.LimitAmount - 限红处理异常
+	java.lang.NullPointerException: null
+    at com.hitler.lottery.calc.LimitAmount.limit(LimitAmount.java:53)
+    at com.hitler.lottery.calc.BetOrderCalcEventWorker.execute(BetOrderCalcEventWorker.java:130)
+    at com.hitler.lottery.event.AwardEvent$SchemaLotteryEvent.run(AwardEvent.java:219)
+	是因为问题：2导致dubbo处理超时，返回对象注单集合有问题，导致获取盈利金额出现控指正
+	
+	5：Data truncation: Data too long for column 'MISS_TIMES' at row 1
+	是因为t_lottery_munber_info表中这个字段字节长度设置不合理导致
+	
+	6：[投注,KG,47,20181027-0570,yc1650]投注失败!写入缓存失败：
+	缓存原因，put数据失败
+	
+10-30~31夜间测试问题汇总：
+	1：druid数据库连接池报错
+	ERROR com.alibaba.druid.pool.DruidDataSource - recyle error
+	连接线程回收导致连接超时失败
+	检查原因是1.1.6版本中使用了可中断时枷锁方式，中断之后回收就会出错
+	换成1.1.10使用lock加锁方式就不会出现这种问题
+	
+	2：drid数据库连接池出现200最大连接上限，导致其他sql请求执行失败
+	暂时调到250，配合duridUI检查耗时sql，才能根本解决问题
+	
+	3：Table has no partition for value 1541165400
+	t_lottery_number表分区，之生成之后一天的分区，一天以上的没有自动分区，导致写入数据失败。
+	
+	4：安装druid数据库连接池ui
+	只能使用bean方式构建servlet访问方式，但是需要通过代码初始化数据源，不利于配置，所以可以不实现
+	
+	5：测试分区表因为唯一联合索引失效的问题

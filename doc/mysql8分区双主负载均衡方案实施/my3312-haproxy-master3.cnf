@@ -1,0 +1,85 @@
+[mysql]
+default-character-set=utf8
+
+[mysqld]
+#skip-grant-tables
+default-time_zone='+8:00'
+log_timestamps=SYSTEM
+datadir=/home/mysql/mysql-8.0.12/haproxy_env/mysql-8.0.12-master3/data
+basedir=/home/mysql/mysql-8.0.12/haproxy_env/mysql-8.0.12-master3
+socket=/home/mysql/mysql-8.0.12/haproxy_env/mysql-8.0.12-master3/tmp/mysql.sock
+relay_log=/home/mysql/mysql-8.0.12/haproxy_env/mysql-8.0.12-master3/data/relay_3312
+default-storage-engine=INNODB
+character_set_server=utf8
+max_allowed_packet=1024M
+port=3312
+default_authentication_plugin=mysql_native_password
+max_connections=100000
+table_open_cache=20000
+table_open_cache_instances=20000
+innodb_buffer_pool_size=4G
+auto_increment_increment=3
+auto_increment_offset=3
+innodb_file_per_table=1
+wait_timeout=31536000
+interactive_timeout=31536000
+
+#新增优化配置项
+open_files_limit=10240
+back_log = 600 
+external-locking = FALSE  
+sort_buffer_size = 8M
+join_buffer_size = 8M
+thread_cache_size = 300 
+tmp_table_size = 512M
+max_heap_table_size = 256M
+
+binlog_cache_size = 1G
+max_binlog_cache_size = 1G
+max_binlog_size = 1G
+key_buffer_size = 2048M 
+read_buffer_size = 8M  
+read_rnd_buffer_size = 16M  
+bulk_insert_buffer_size = 1024M
+innodb_buffer_pool_size = 2048M
+innodb_thread_concurrency = 32  
+innodb_flush_log_at_trx_commit = 2   
+innodb_log_buffer_size = 16M
+innodb_concurrency_tickets=500
+innodb_log_file_size = 256M
+innodb_log_files_in_group = 3
+innodb_max_dirty_pages_pct = 90
+innodb_lock_wait_timeout = 120
+slow_query_log = ON
+slow_query_log_file = /home/mysql/mysql-8.0.12/haproxy_env/mysql-8.0.12-master3/logs/slow_sql.log
+long_query_time = 1
+log_queries_not_using_indexes=1
+event_scheduler=1
+
+#主从配置
+log-bin=mysql-bin
+log-bin-index=mysql-bin.index
+server_id=6
+
+binlog-do-db=op    #待同步的数据库
+binlog-do-db=jt_test
+binlog-do-db=op2
+binlog_row_image=minimal
+
+log-slave-updates=1
+binlog-ignore-db=information_schema
+binlog-ignore-db=performance_schema
+binlog-ignore-db=mysql
+binlog-ignore-db=sys
+slave-skip-errors=all
+lower_case_table_names=1
+binlog_expire_logs_seconds=86400
+slave_parallel_type=logical_clock
+slave_parallel_workers=16
+
+sql_mode=IGNORE_SPACE,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+
+[mysqld_safe]
+log-error=/home/mysql/mysql-8.0.12/haproxy_env/mysql-8.0.12-master3/logs/mysql.log
+pid-file=/home/mysql/mysql-8.0.12/haproxy_env/mysql-8.0.12-master3/mysql.pid
+

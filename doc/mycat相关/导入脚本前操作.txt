@@ -1,0 +1,78 @@
+1：核对数据表中有哪些租户，在原有环境中查询：
+	SELECT DISTINCT(TENANT_CODE) FROM t_tenant_game;
+	
+2：分别对这些租户进行创建数据库：
+规则：op_租户号
+例如：
+
+DROP database IF EXISTS op;
+create database op DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_110001;
+create database op_110001 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111005;
+create database op_111005 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111011;
+create database op_111011 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111101;
+create database op_111101 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111102;
+create database op_111102 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111103;
+create database op_111103 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111106;
+create database op_111106 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111107;
+create database op_111107 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111109;
+create database op_111109 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111110;
+create database op_111110 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111111;
+create database op_111111 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_1111112;
+create database op_1111112 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111113;
+create database op_111113 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111117;
+create database op_111117 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111118;
+create database op_111118 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111119;
+create database op_111119 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_111120;
+create database op_111120 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_199105;
+create database op_199105 DEFAULT CHARACTER SET utf8;
+DROP database IF EXISTS op_222011;
+create database op_222011 DEFAULT CHARACTER SET utf8;
+
+3：执行脚本文件mycat_op_integer.sql导入一个库中的表和数据，然后把这个库中的数据分别复制给其他库
+
+注意：
+新增了全局表：t_game_group、t_game_family_dtl、t_game_play需要重新导出mycat_op_integer.sql脚本
+
+4：mycat程序不支持注解的处理：
+  可以直接在sql语句种添加：mycatAnnotation=/**/
+  
+5：如果有新增租户需要在mysql配置文件中添加：
+binlog-do-db=op    #待同步的数据库
+binlog-do-db=jt_test
+binlog-do-db=op_110001
+binlog-do-db=op_111005
+binlog-do-db=op_111011
+binlog-do-db=op_111101
+binlog-do-db=op_111102
+binlog-do-db=op_111103
+binlog-do-db=op_111106
+binlog-do-db=op_111107
+binlog-do-db=op_111109
+binlog-do-db=op_111110
+binlog-do-db=op_111111
+binlog-do-db=op_1111112
+binlog-do-db=op_111113
+binlog-do-db=op_111117
+binlog-do-db=op_111118
+binlog-do-db=op_111119
+binlog-do-db=op_111120
+binlog-do-db=op_199105
+binlog-do-db=op_222011

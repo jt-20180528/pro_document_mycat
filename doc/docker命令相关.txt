@@ -147,4 +147,5 @@ docker正对的是容器本身，id或者容器名称
 	查看内存消耗最高的前10进程：
 	ps aux|head -1;ps aux|grep -v PID|sort -rn -k +4|head
 	
-16
+16：docker 查看镜像日志
+	docker logs -f -t --tail 10 容器名称

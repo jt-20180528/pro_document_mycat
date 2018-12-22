@@ -110,8 +110,7 @@ show processlist;
 stop slave;
 
 修改ip、账号、密码、二进制文件、位移编号、、
-CHANGE MASTER TO MASTER_HOST='192.168.0.213', MASTER_USER='t_user1', MASTER_PASSWORD='123456',master_port=3311,MASTER_LOG_FILE='mysql-bin.000074',
-MASTER_LOG_POS=895931558;
+CHANGE MASTER TO MASTER_HOST='192.168.0.205', MASTER_USER='t_user1', MASTER_PASSWORD='123456',master_port=3306,MASTER_LOG_FILE='mysql-bin.000087',MASTER_LOG_POS=12467;
 
 启动从节点：
 start slave;
@@ -151,3 +150,26 @@ default-time-zone='+8:00'
 已经处理了mysql的时区‘+8:00’但是日志记录时，打印时间少8小时：
 需要在my.cnf配置文件中配置：
 log_timestamps=SYSTEM
+
+5：自定义安装数据库配置开机自启
+启动文件路路径：/etc/init.d/sh
+启动文件：my3306-master.sh  my3307-slave.sh
+文件中必须包含：
+#!/bin/bash
+
+#chkconfig: - 85 15
+#description: nginx is a World Wide Web server. It is used to serve
+
+cd /home/mysql/mysql-8.0.12-master/bin && ./mysqld_safe --defaults-file=/etc/my3306-master.cnf &
+
+在/etc/init.d文件夹中配置
+ln -s /etc/init.d/sh/my3306-master.sh my3306;
+ln -s /etc/init.d/sh/my3306-slave.sh my3307;
+
+分别添加到服务：
+chkconfig --add my3306
+chkconfig --add my3307
+
+设置开机自启：
+chkconfig my3306 on
+chkconfig my3307 on

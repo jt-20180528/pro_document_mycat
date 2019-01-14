@@ -1,0 +1,61 @@
+mysql数据库备份：
+1：dump方式
+cd bin
+备份单、多个表
+mysqldump -u username -p dbname table1 table2 ...-> BackupName.sql
+备份单、多个库
+mysqldump -u username -p --databases dbname1 dbname2 > Backup.sql
+备份所有库
+mysqldump -u username -p -all-databases > BackupName.sql
+
+2：直接打包整个库
+复制到备份机
+
+3：mysqlhotcopy工具快速备份
+mysqlhotcopy [option] dbname1 dbname2 backupDir/
+
+4：sql还原
+./mysql -uroot -port3307 -pJt@2018 -S ../tmp/mysql.sock op < /home/mysql/slave_backup_all.sql
+或者使用source
+source tb1_tb2.sql;
+
+工具：
+lvm2 snapshot: 几乎热备, 借助文件系统管理工具进行备份
+xtrabackup: 一款非常强大的InnoDB/XtraDB热备工具, 支持完全备份、增量备份, 由percona提供
+
+直接备份库：
+./mysqldump -uroot -port3306 -p123456 -S ../tmp/mysql.sock --databases op_pay > /opt/mysql/master_backup_op_pay_20190108.sql
+直接备份库中的表：
+./mysqldump -uroot -port3307 -pJt@2018 -S ../tmp/mysql.sock op t_bet_order > /home/mysql/slave_backup_[t_bet_order].sql
+
+备份其他机器
+mysqldump -h132.72.192.432 -P3307 -uroot -p8888 htgl > bak.sql;
+
+5：备份单个表数据select... into outfile ""
+select * FROM T_BET_ORDER into outfile "/home/mysql/slave_backup_02.sql"
+LOAD DATA LOCAL INFILE '/home/mysql/slave_backup_02.sql' INTO TABLE `t_bet_order`
+
+还原
+./mysql -uroot -port3307 -pJt@2018 -S ../tmp/mysql.sock op < /opt/mysql/master_backup_all_20190108.sql
+
+6：使用mysqlpump多线程备份
+--single-transaction:食物隔离级别，允许备份过程中的食物提交
+-B：制定数据库
+--default-parallelism：设置备份线程数
+--compress-output=LZ4：启用压缩
+
+./mysqlpump -uroot -port3307 -pJt@2018 -S ../tmp/mysql.sock --single-transaction --default-character-set=UTF8MB4 --compress-output=LZ4 -B op --default-parallelism=6 > /home/mysql/slave_backup_all01.sql
+
+不压缩
+./mysqlpump -uroot -port3306 -p123456 -S ../tmp/mysql.sock --single-transaction --default-character-set=UTF8MB4 -B op op_pay --default-parallelism=6 > /opt/mysql/master_backup_all_20190108.sql
+
+7：测试删除索引
+
+drop index `IDX_ORDERNO` on t_bet_order;                                                                                            
+drop index `IDX_USER_ID` on t_bet_order;                                                                                                  
+drop index `IDX_BET_ID` on t_bet_order;                                                                                                  
+drop index `IDX_LOTTERY_NUMBER_ID` on t_bet_order;                                                                                
+drop index `IDX_TENANT_CODE_BET_TIME` on t_bet_order;                                                                           
+drop index `IDX_BATCHORDERNO` on t_bet_order;                                                                               
+drop index `IDX_GAME_ID` on t_bet_order;                                                                                                   
+drop index `IDX_ORDER_STATUS` on t_bet_order;

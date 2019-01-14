@@ -1,0 +1,4 @@
+命令：crontab -e
+添加定时执行的脚本任务：
+0 0 * * * sh /root/ntpdate.sh
+0 0 * * * sh /root/cleanlogs.sh

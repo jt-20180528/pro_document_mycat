@@ -1,0 +1,39 @@
+使用xtrabackup做mysql备份：
+
+1：从官网下载xtrabackup组件：
+https://www.percona.com/software/mysql-database/percona-xtrabackup
+mysql8.0需要选择8.0版本下载
+Percona-XtraBackup-8.0.4-rc2c0777-el7-x86_64-bundle.tar
+
+解压出3个文件，主要安装：
+percona-xtrabackup-80-8.0.4-1.el7.x86_64.rpm
+
+2：卸载删除就得依赖
+yum remove mysql-libs
+
+3：安装必须组件
+yum install -y perl-DBD-MySQL
+rpm -ivh percona-xtrabackup-80-8.0.4-1.el7.x86_64.rpm
+
+4：开始执行导出
+
+只能使用t_user1的用户，并赋予所有权限，不能使用root账户
+
+全量备份
+xtrabackup --defaults-file=/etc/my3307-slave.cnf --user=t_user1 --password=123456 --socket=/home/mysql/mysql-8.0.12-slave/tmp/mysql.sock --backup --target-dir=/home/mysql/back1
+
+5：还原[还原一定要停止服务，还原时需要重新给data赋予权限，并停止服务]
+xtrabackup --defaults-file=/etc/my3307-slave.cnf --copy-back --target-dir=/home/mysql/back
+
+6：增量备份
+xtrabackup --defaults-file=/etc/my3307-slave.cnf --user=t_user1 --password=123456 --socket=/home/mysql/mysql-8.0.12-slave/tmp/mysql.sock --incremental --incremental-dir=/home/mysql/incre01 --incremental-basedir=/home/mysql/back 
+
+./mysql -uroot -port3307 -pJt@2018 -S ../tmp/mysql.sock op < /opt/mysql/master_backup_all_20190108.sql
+
+./mysql -uroot -port3306 -pJt@2018 -S ../tmp/mysql.sock op < /home/mysql/mysql_back/master_backup_op_20190108.sql
+
+正式环境准备更新
+
+此次更新：
+修正试玩会员返点变更
+增加KG最大金额限制参数定义

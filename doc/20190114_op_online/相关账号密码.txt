@@ -1,0 +1,44 @@
+内测机器：
+1:172.168.30.30
+root/bdb123456
+安装服务：
+禅道：
+/opt/zbox/zbox start/stop/restart
+ldashi/123456
+
+内测jenkins：
+/opt/soft/jenkins/server.sh start/stop/status
+jt/jt123456
+
+nexus服务器：8081
+http://172.168.30.30:8081
+admin/jt123456
+
+svn:
+/opt/soft/svn_server.sh
+lj/lj123456
+如果设置新账号，需要修改配置，请参考网址：
+https://www.cnblogs.com/Life-Record/p/7099297.html
+
+gitlab：80端口
+gitlab-ctl start/stop/restart
+我的号：lj/lj123456
+主账号：root/jt123456
+
+内测数据库主库：
+地址：/home/mysql/mysql-8.0.12-master
+服务启动：
+service mysql start/stop/restart
+
+=================================
+
+2:172.168.30.252
+root/bdb123456
+内测服务配置与安装
+
+内测数据库从库：3307端口
+地址：/home/mysql/mysql-8.0.12-slave
+数据库备份还原相关脚本地址：
+/home/mysql/backup_script/*
+服务启动：
+service mysql start/stop/restart

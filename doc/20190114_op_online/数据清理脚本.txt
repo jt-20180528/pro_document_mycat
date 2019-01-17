@@ -1,0 +1,53 @@
+
+/* 可以清理的表数据：*/
+truncate table t_bet_order;					/* 注单表 */
+truncate table t_bet_order_data;			/* 注单数据表 */
+truncate table t_charge_order;				/* 人工扣款表*/
+truncate table t_chase_order;				/* 追号订单表*/
+truncate table t_chase_issue;				/* 追号期号表*/
+truncate table t_chase_number;				/* 保存追号期号具体投注内容*/
+truncate table t_chat_greetings;			/* 聊天常用消息表*/
+truncate table t_chat_offline_record;		/* 离线消息表*/
+truncate table t_chat_record;				/* 消息记录表*/
+truncate table t_contract_bonus_record;		/* 契约分红记录表 */
+truncate table t_daily_wages_record;		/* 日工资记录表*/
+truncate table t_exchange_record;			/* 额度转换记录 */
+truncate table t_message;					/* 站内消息表 */
+truncate table t_quota_record;				/* 配额变动记录表 */
+truncate table t_recharge_order;			/* 充值记录表 */
+truncate table t_report_game;				/* 游戏报表 */
+truncate table t_report_team;				/* 团队报表*/
+truncate table t_report_team_platform;		/* 团队平台报表*/
+truncate table t_report_tenant;				/* 公司报表*/
+truncate table t_report_tenant_platform;	/* 公司平台报表 */
+truncate table t_report_user;				/* 用户报表 */
+truncate table t_report_user_game;			/* 用户游戏报表 */
+truncate table t_report_user_platform;		/* 用户平台报表 */
+truncate table t_room_bet;					/* 房间投注表*/
+truncate table t_room_msg_record;			/* 房间消息记录*/
+truncate table t_sticky_note;				/* 便利贴 */
+truncate table t_third_ag_record;			/* 第三方ag注单记录*/
+truncate table t_third_bb_record;			/* 第三方bb注单记录*/
+truncate table t_third_ds_record;			/* 第三方ds注单记录*/
+truncate table t_third_ky_record;			/* 第三方ky注单记录*/
+truncate table t_third_mg_record;			/* 第三方mg注单记录*/
+truncate table t_third_pt_record;			/* 第三方pt注单记录*/
+truncate table t_third_sb_record;			/* 第三方sb注单记录*/
+truncate table t_third_ag_trans_acounts;	/* 第三方ag账号*/
+truncate table t_third_bb_trans_acounts;	/* 第三方bb账号*/
+truncate table t_third_mg_trans_acounts;	/* 第三方mg账号*/
+truncate table t_third_pt_trans_acounts;	/* 第三方pt账号*/
+truncate table t_transaction;				/* 账变流水表*/
+truncate table t_todolist;					/* 待办事项表*/
+truncate table t_user_login;				/* 用户登陆表*/
+truncate table t_user_oper;					/* 用户最后操作表*/
+truncate table t_user_operationlog;			/* 用户操作记录表*/
+truncate table t_user_recharge_order;		/* 用户充值记录表*/
+truncate table t_user_registercode;			/* 用户注册码*/
+truncate table t_user_score_record;			/* 用户积分表*/
+truncate table t_user_transfer_order;		/* 用户转账记录(上下级) */
+truncate table t_user_withdraw;				/* 用户提现表*/
+truncate table t_user_layer_tenant_bankcard;/* 分层银行卡关系*/
+
+/* 停用公司银行卡*/
+update t_tenant_bankcard set AVAILABLE=0

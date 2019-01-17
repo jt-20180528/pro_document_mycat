@@ -11,6 +11,7 @@ http://172.168.30.30:9000/zentao/my/
 内测jenkins：
 /opt/soft/jenkins/server.sh start/stop/status
 jt/jt123456
+访问地址：http://172.168.30.30:8084/jenkins
 
 nexus服务器：8081
 http://172.168.30.30:8081
@@ -19,6 +20,7 @@ admin/jt123456
 svn:
 /opt/soft/svn_server.sh
 lj/lj123456
+地址：svn://172.168.30.30/web-project
 如果设置新账号，需要修改配置，请参考网址：
 https://www.cnblogs.com/Life-Record/p/7099297.html
 
@@ -44,3 +46,16 @@ root/bdb123456
 /home/mysql/backup_script/*
 服务启动：
 service mysql start/stop/restart
+
+==============================
+
+跳板机
+
+3：jenkins
+安装地址：/opt/soft/jenkins/server.sh start/stop/status
+访问地址：http://165.84.183.111:8084/jenkins/
+jt/jt123456
+
+4：jmeter安装
+/opt/soft/jmeter-4.0
+/opt/soft/jmeter-4.0/jmx_files/server start/stop

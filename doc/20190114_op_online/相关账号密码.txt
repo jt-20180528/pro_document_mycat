@@ -5,6 +5,8 @@ root/bdb123456
 禅道：
 /opt/zbox/zbox start/stop/restart
 ldashi/123456
+主账号：admin/123456
+http://172.168.30.30:9000/zentao/my/
 
 内测jenkins：
 /opt/soft/jenkins/server.sh start/stop/status
